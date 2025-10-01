@@ -181,7 +181,7 @@ export default function Forms() {
   }
 
   return (
-    <section id="formsListSection" className="p-2 md:p-6">
+    <section id="formsListSection" className="p-2 md:p-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
       <ToastContainer position="top-right" autoClose={3000} />
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
@@ -252,7 +252,7 @@ export default function Forms() {
                 <td className="px-3 py-2 text-center" data-label="Actions" data-actions>
                   <div className="mobile-action-btns flex justify-center gap-1">
                     <button
-                      className="px-2 py-1 rounded bg-black text-white text-xs hover:bg-gray-800 flex items-center justify-center min-w-[32px]"
+                      className="px-2 py-1 rounded bg-black text-white text-lg hover:bg-gray-800 flex items-center justify-center"
                       onClick={() => handleEdit(form.id)}
                       title="Edit Form"
                       disabled={isActionLoading(form.id)}
@@ -260,33 +260,33 @@ export default function Forms() {
                       {isActionLoading(form.id) ? (
                         <FiLoader className="animate-spin" size={12} />
                       ) : (
-                        <FiEdit size={12} />
+                        <FiEdit size={14} />
                       )}
                     </button>
                     <button
-                      className="px-2 py-1 rounded bg-red-600 text-white text-xs hover:bg-red-700 flex items-center justify-center min-w-[32px]"
+                      className="px-2 py-1 rounded bg-red-600 text-white text-xs hover:bg-red-700 flex items-center justify-center"
                       onClick={() => handleDelete(form.id, form.form_title)}
                       title="Delete Form"
                       disabled={deleteModal.loading}
                     >
-                      <FiTrash2 size={12} />
+                      <FiTrash2 size={14} />
                     </button>
                     <button
-                      className="px-2 py-1 rounded bg-slate-700 text-white text-xs hover:bg-slate-800 flex items-center justify-center min-w-[32px]"
+                      className="px-2 py-1 rounded bg-slate-700 text-white text-xs hover:bg-slate-800 flex items-center justify-center "
                       onClick={() => handleDuplicate(form.id, form.form_title)}
                       title="Duplicate Form"
                       disabled={duplicateModal.loading}
                     >
-                      <FiCopy size={12} />
+                      <FiCopy size={14} />
                     </button>
                     <button
-                      className="px-2 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700 flex items-center justify-center min-w-[32px]"
+                      className="px-2 py-1 rounded bg-black text-white text-xs hover:bg-gray-800 flex items-center justify-center"
                       onClick={() => handleCopyUrl(form.id)}
                       title="Copy Form URL"
                       disabled={isActionLoading(`copy-url-${form.id}`)}
                     >
                       {isActionLoading(`copy-url-${form.id}`) ? (
-                        <FiLoader className="animate-spin" size={12} />
+                        <FiLoader className="animate-spin" size={14} />
                       ) : (
                         <FiClipboard size={12} />
                       )}
@@ -307,7 +307,7 @@ export default function Forms() {
           <button className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">
             <FiChevronLeft size={16} />
           </button>
-          <button className="px-2.5 py-1.5 rounded-lg border bg-brand-600 text-white border-brand-600">1</button>
+          <button className="px-3 py-1 rounded-lg border bg-brand-600 text-white border-brand-600">1</button>
           <button className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50">
             <FiChevronRight size={16} />
           </button>
@@ -318,21 +318,21 @@ export default function Forms() {
       {deleteModal.isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Confirm Deletion</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-xl text-black font-bold">Confirm Deletion</h3>
+            <p className="text-base text-black my-3">
               Are you sure you want to delete the form "{deleteModal.formTitle}"? This action cannot be undone.
             </p>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3 pt-1">
               <button
                 onClick={() => setDeleteModal({ isOpen: false, formId: null, formTitle: "", loading: false })}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white  text-xl w-32 text-center"
                 disabled={deleteModal.loading}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center min-w-[80px]"
+                className="px-3 md:px-5 py-3 rounded bg-black text-white  text-xl w-32 text-center"
                 disabled={deleteModal.loading}
               >
                 {deleteModal.loading ? (
@@ -349,10 +349,10 @@ export default function Forms() {
       {duplicateModal.isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Duplicate Form</h3>
-            <p className="text-gray-600 mb-4">Create a copy of "{duplicateModal.formTitle}"</p>
+            <h3 className="text-2xl text-black font-bold">Duplicate Form</h3>
+            <p className="text-base text-black my-2">Create a copy of "{duplicateModal.formTitle}"</p>
             <div className="mb-4">
-              <label htmlFor="newTitle" className="block text-sm font-medium text-gray-700 mb-1">New Form Title</label>
+              <label htmlFor="newTitle" className="block  mb-1 text-lg text-black font-medium">New Form Title</label>
               <input
                 type="text"
                 id="newTitle"
@@ -365,14 +365,14 @@ export default function Forms() {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setDuplicateModal({ isOpen: false, formId: null, formTitle: "", newTitle: "", loading: false })}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl"
                 disabled={duplicateModal.loading}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDuplicate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center min-w-[100px]"
+                className="px-3 md:px-5 py-3 rounded bg-black text-white text-xl"
                 disabled={duplicateModal.loading}
               >
                 {duplicateModal.loading ? (

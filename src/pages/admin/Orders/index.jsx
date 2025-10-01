@@ -78,7 +78,7 @@ export default function Orders() {
                 <tr>
                   <th className="text-left font-medium px-3 py-2">Order ID</th>
                   <th className="text-left font-medium px-3 py-2">Form ID</th>
-                  <th className="text-right font-medium px-3 py-2">Total</th>
+                  <th className="text-left font-medium px-3 py-2">Total</th>
                   <th className="text-left font-medium px-3 py-2">Status</th>
                   <th className="text-left font-medium px-3 py-2">Date</th>
                   <th className="text-center font-medium px-3 py-2">Actions</th>
@@ -93,11 +93,11 @@ export default function Orders() {
                     <td className="px-3 py-2" data-label="Form ID">
                       {order.form_id}
                     </td>
-                    <td className="px-3 py-2 text-right" data-label="Total">
+                    <td className="px-3 py-2 text-left" data-label="Total">
                       ₹{order.total_amount}
                     </td>
                     <td className="px-3 py-2" data-label="Status">
-                      <span className="inline-flex px-3 py-0.5 rounded-full border border-[#bbb] bg-[#dcdcdc] order-status-badge">
+                      <span className="inline-flex px-3 py-0.5 rounded-full border border-[#bbb] bg-[#dcdcdc] order-status-badge capitalize text-sm">
                         {order.status}
                       </span>
                     </td>
@@ -111,7 +111,7 @@ export default function Orders() {
                     >
                       <div className="mobile-action-btns flex justify-center gap-2">
                         <button
-                          className="px-2 py-1 rounded bg-black text-white text-xs flex items-center gap-1"
+                          className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
                           title="View"
                         >
                           <FiEye />
@@ -119,7 +119,7 @@ export default function Orders() {
                         </button>
                         <button
                           onClick={() => deleteOrder(order.id)}
-                          className="px-2 py-1 rounded bg-red-600 text-white text-xs flex items-center gap-1"
+                          className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
                           title="Delete"
                         >
                           <FiTrash2 />
@@ -132,6 +132,8 @@ export default function Orders() {
               </tbody>
             </table>
           )}
+
+          
         </div>
       </div>
     </div>

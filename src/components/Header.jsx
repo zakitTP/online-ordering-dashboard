@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { clearUser } from "../lib/userSlice.js";
 import apiClient from "../apiClient.js";
 import { Link } from "react-router-dom";
+import Logo from "../assets/logo.png"
 
 export default function Header() {
   const [isMobile, setIsMobile] = useState(false);
@@ -35,10 +36,10 @@ export default function Header() {
   const renderProfileDropdown = () => (
     <details className="dropdown relative">
       <summary
-        className="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full border border-white md:border-slate-300 hover:text-black hover:bg-slate-50 cursor-pointer text-white md:text-black"
+        className="inline-flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full border border-white md:border-slate-300 hover:text-black bg-black hover:bg-[#C81A1F] cursor-pointer text-white md:text-black"
         aria-haspopup="menu"
       >
-        <FiUser size={20} />
+        <FiUser size={20} className="text-white" />
       </summary>
       <div className="menu absolute right-0 mt-2 w-48 md:w-56 bg-white rounded-md shadow-lg py-1 z-50">
         {user && (
@@ -72,19 +73,19 @@ export default function Header() {
         className="fixed inset-0 bg-black/40"
         aria-label="Close logout modal"
       ></a>
-      <div className="w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white shadow-xl p-6 z-50">
+      <div className="w-full max-w-md mx-4 rounded-lg border border-slate-200 bg-white shadow-xl p-6 z-50">
         <div className="flex items-start gap-3">
-          <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded bg-red-50 text-red-700 border border-red-100">
+          {/* <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded bg-red-50 text-red-700 border border-red-100">
             <FiPower size={20} />
-          </div>
+          </div> */}
           <div className="flex-1">
             <h3 className="text-2xl text-black font-bold">Log out?</h3>
-            <p className="text-lg text-black mt-1">
+            <p className="text-base text-black my-3">
               Are you sure you want to logout?
             </p>
           </div>
         </div>
-        <div className="mt-6 flex items-center justify-end gap-2">
+        <div className="mt-2 flex items-center justify-end gap-2">
           <button
             onClick={() => !loading && setShowLogoutModal(false)}
             disabled={loading}
@@ -124,7 +125,7 @@ export default function Header() {
               <FiMenu size={20} />
             </button>
             <div className="mobile-logo">
-              <img src="media/logo.png" className="w-40" alt="mobile-logo" />
+              <img src={Logo} alt="mobile-logo" className="w-40 mx-auto" />
             </div>
             <div className="relative flex items-center gap-2">{renderProfileDropdown()}</div>
           </div>

@@ -72,17 +72,15 @@ export default function ProductList() {
       {/* Delete Modal */}
       {deleteId && (
         <div id="confirmModal" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white shadow-xl p-6">
+          <div className="w-full max-w-md mx-4 rounded-lg border border-slate-200 bg-white shadow-xl p-6">
             <div className="flex items-start gap-3">
-              <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded bg-brand-50 text-brand-700 border border-brand-100">
-                <i className="fa-solid fa-triangle-exclamation"></i>
-              </div>
+             
               <div className="flex-1">
-                <h3 className="text-2xl text-black font-bold">Delete item?</h3>
-                <p className="text-lg text-black mt-1">Are you sure you want to delete this product?</p>
+                <h3 className="text-xl text-black font-bold">Delete item?</h3>
+                <p className="text-base text-black my-3">Are you sure you want to delete this product?</p>
               </div>
             </div>
-            <div className="mt-8 flex items-center justify-end gap-2">
+            <div className="mt-1 flex items-center justify-end gap-2">
               <button
                 onClick={() => setDeleteId(null)}
                 className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
@@ -149,7 +147,7 @@ export default function ProductList() {
           <>
             {/* Products Table */}
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <table className="min-w-full text-sm responsive">
                 <thead>
                   <tr>
                     <th className="text-left font-medium px-3 py-2">ID</th>
@@ -165,8 +163,8 @@ export default function ProductList() {
                 <tbody>
                   {products.map((p) => (
                     <tr key={p.id} className="border-t">
-                      <td className="px-3 py-2">{p.id}</td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2" data-label="ID">{p.id}</td>
+                      <td className="px-3 py-2" data-label="Image">
                         {p.image_url && (
                           <img
                             src={p.image_url}
@@ -175,26 +173,26 @@ export default function ProductList() {
                           />
                         )}
                       </td>
-                      <td className="px-3 py-2 font-medium">{p.title}</td>
-                      <td className="px-3 py-2">
-                        <span className="inline-flex justify-center border border-[#bbb] px-4 py-0.5 rounded-full bg-[#dcdcdc] category-card-title">
+                      <td className="px-3 py-2 font-medium" data-label="Product">{p.title}</td>
+                      <td className="px-3 py-2" data-label="Category">
+                        <span className="inline-flex  justify-center border border-[#bbb]  px-4 py-0.5 rounded-full bg-[#dcdcdc] category-card-title text-sm">
                           {p.category?.name}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right">${p.prepaid_price}</td>
-                      <td className="px-3 py-2 text-right">${p.standard_price}</td>
-                      <td className="px-3 py-2 text-right">{p.labour_price > 0 ? `$${p.labour_price}` : "-"}</td>
-                      <td className="px-3 py-2 text-center">
-                        <div className="flex justify-center gap-1">
+                      <td className="px-3 py-2 text-right" data-label="Prepaid Price">${p.prepaid_price}</td>
+                      <td className="px-3 py-2 text-right" data-label="Prepaid Price">${p.standard_price}</td>
+                      <td className="px-3 py-2 text-right" data-label="Extra Labour">{p.labour_price > 0 ? `$${p.labour_price}` : "-"}</td>
+                      <td className="px-3 py-2 text-center" data-label="Actions">
+                        <div className="flex justify-start gap-1">
                           <button
                             onClick={() => navigate(`/dashboard/products/edit/${p.id}`)}
-                            className="px-2 py-1 rounded bg-black text-white text-xs"
+                            className="px-2 py-1 rounded bg-black text-white text-sm"
                           >
                             <FiEdit />
                           </button>
                           <button
                             onClick={() => setDeleteId(p.id)}
-                            className="px-2 py-1 rounded bg-brand-600 text-white text-xs"
+                            className="px-2 py-1 rounded bg-brand-600 text-white text-sm"
                           >
                             <FiTrash2 />
                           </button>
@@ -207,7 +205,7 @@ export default function ProductList() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4 text-base md:text-lg">
+            <div className="flex items-center justify-between mt-4 text-base ">
               <button
                 onClick={() => setPage(1)}
                 disabled={page === 1}
@@ -227,7 +225,7 @@ export default function ProductList() {
                   >
                     <FiChevronLeft />
                   </button>
-                  <span className="px-2.5 py-1.5 rounded-lg border bg-brand-600 text-white border-brand-600">{page}</span>
+                  <span className="px-3 py-1 rounded-lg border bg-brand-600 text-white border-brand-600">{page}</span>
                   <button
                     onClick={() => setPage(page + 1)}
                     disabled={page === totalPages}

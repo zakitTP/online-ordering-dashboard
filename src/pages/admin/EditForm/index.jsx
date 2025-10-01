@@ -282,7 +282,7 @@ const saveForm = async (status) => {
   }
 
   return (
-    <section id="wizardSection">
+    <section id="wizardSection" className="border rounded-lg overflow-hidden shadow-md ">
       <ToastContainer position="top-right" autoClose={3000} />
       {saving && (
         <div className="fixed inset-0 bg-black/30 z-50 grid place-items-center">

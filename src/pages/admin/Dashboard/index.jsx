@@ -56,7 +56,7 @@ export default function Dashboard() {
               <p className="text-xl font-bold">{card.label}</p>
               <p className="text-3xl font-bold mt-2 flex justify-center">
                 {loading ? "..." : card.label === "Settings" ? (
-                  <FaArrowRight />
+                  <FaArrowRight className="mt-1"/>
                 ) : (
                   card.value
                 )}

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { FiTrash2, FiEdit, FiCopy } from "react-icons/fi";
+import { FiTrash2, FiEdit, FiCopy,FiPlus } from "react-icons/fi";
 import apiClient from "../../../apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
@@ -76,7 +77,7 @@ export default function CategoriesPage() {
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center gap-1"
           >
-            <i className="fa-solid fa-plus mr-1"></i> Add Category
+            <FiPlus className="mr-1 text-white" /> Add Category
           </button>
         </div>
 
@@ -141,17 +142,17 @@ export default function CategoriesPage() {
 
     <div className="relative w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white shadow-xl p-6 z-10">
       <div className="flex items-start gap-3">
-        <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded bg-brand-50 text-brand-700 border border-brand-100">
+        {/* <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded bg-brand-50 text-brand-700 border border-brand-100">
           <i className="fa-solid fa-folder-plus"></i>
-        </div>
+        </div> */}
         <div className="flex-1">
           <h3 className="text-2xl text-black font-bold">Add Category</h3>
-          <p className="text-lg text-black mt-1">Add a new category to the list.</p>
+          <p className="text-base text-black my-2">Add a new category to the list.</p>
         </div>
       </div>
 
       <form
-        className="mt-4 space-y-4"
+        className="mt-1 space-y-4"
         onSubmit={(e) => {
           e.preventDefault();
           handleAddCategory();
@@ -169,7 +170,7 @@ export default function CategoriesPage() {
         </div>
       </form>
 
-      <div className="mt-6 flex items-center justify-end gap-2">
+      <div className="mt-4 flex items-center justify-end gap-2">
         <button
           onClick={() => setShowAddModal(false)}
           className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl"
@@ -197,21 +198,21 @@ export default function CategoriesPage() {
       {showDeleteModal && selectedCategory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow w-96">
-            <h2 className="text-xl font-bold mb-4">Are you sure?</h2>
-            <p className="mb-4">
+            <h2 className="text-xl text-black font-bold">Are you sure?</h2>
+            <p className="text-base text-black my-3">
               Do you really want to delete <strong>{selectedCategory.name}</strong>?
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
                 disabled={actionLoading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteCategory}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2"
+                className="px-3 md:px-5 py-3 rounded bg-black text-white text-xl w-32 text-center "
                 disabled={actionLoading}
               >
                 {actionLoading && <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>}

@@ -145,13 +145,13 @@ export default function UserList() {
                       <div className="flex justify-center gap-1">
                         <Link
                           to={`/dashboard/users/edit/${u.id}`}
-                          className="px-2 py-1 rounded bg-black text-white opacity-50 text-xs flex items-center justify-center"
+                          className="px-2 py-1 rounded bg-black text-white text-sm flex items-center justify-center"
                         >
                           <FiEdit />
                         </Link>
                         <button
                           onClick={() => confirmDelete(u)}
-                          className="px-2 py-1 rounded bg-brand-600 text-white text-xs flex items-center justify-center"
+                          className="px-2 py-1 rounded bg-brand-600 text-white text-sm flex items-center justify-center"
                         >
                           <FiTrash2 />
                         </button>
@@ -165,7 +165,7 @@ export default function UserList() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-4 text-sm">
+        <div className="flex items-center justify-between mt-4 text-base">
           <p className="text-slate-600">
             Showing {users.length ? (page - 1) * perPage + 1 : 0}–{Math.min(page * perPage, users.length)} of {users.length}
           </p>
@@ -177,7 +177,7 @@ export default function UserList() {
             >
               <FiChevronLeft />
             </button>
-            <span className="px-2.5 py-1.5 rounded-lg border bg-brand-600 text-white border-brand-600">{page}</span>
+            <span className="px-2.5 py-1 rounded-lg border bg-brand-600 text-white border-brand-600">{page}</span>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages}
@@ -194,15 +194,15 @@ export default function UserList() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white shadow-xl p-6">
             <div className="flex items-start gap-3">
-              <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded bg-brand-50 text-brand-700 border border-brand-100">
+              {/* <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded bg-brand-50 text-brand-700 border border-brand-100">
                 <FiTrash2 className="text-xl" />
-              </div>
+              </div> */}
               <div className="flex-1">
                 <h3 className="text-2xl text-black font-bold">Delete user?</h3>
-                <p className="text-lg text-black mt-1">Are you sure you want to delete <strong>{selectedUser?.name}</strong>?</p>
+                <p className="text-base text-black my-3">Are you sure you want to delete <strong>{selectedUser?.name}</strong>?</p>
               </div>
             </div>
-            <div className="mt-8 flex items-center justify-end gap-2">
+            <div className="mt-1 flex items-center justify-end gap-2">
               <button
                 onClick={() => setShowModal(false)}
                 className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"

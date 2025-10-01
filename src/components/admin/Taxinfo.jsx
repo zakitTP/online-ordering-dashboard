@@ -132,10 +132,10 @@ const Taxes = ({ formData, setFormData }) => {
                     {opt.sub && <div className="text-base text-slate-500">{opt.sub}</div>}
 
                     {opt.custom && checked && (
-                      <div className="mt-2 flex lg:flex-row flex-col items-start lg:items-center gap-2">
+                      <div className="mt-2 flex lg:flex-row flex-col items-start lg:items-center gap-2 overflow-hidden">
                         <input
                           ref={customNameRef}
-                          className="w-40 rounded-lg border border-slate-300 px-3 py-2 text-base"
+                          className="w-40 rounded-lg border border-slate-300 px-2 py-1 text-base"
                           placeholder="Label (e.g., City Tax)"
                           value={customName}
                           onChange={(e) => setCustomName(e.target.value)}
@@ -146,7 +146,7 @@ const Taxes = ({ formData, setFormData }) => {
                             type="number"
                             min="0"
                             step="0.01"
-                            className="w-24 rounded-lg border border-slate-300 px-3 py-2 text-base"
+                            className="w-10 rounded-lg border border-slate-300 px-2 py-1 text-base"
                             placeholder="Rate %"
                             value={customRate}
                             onChange={(e) => setCustomRate(e.target.value)}
