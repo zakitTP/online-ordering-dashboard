@@ -84,7 +84,7 @@ export default function Orders() {
                   <th className="text-center font-medium px-3 py-2">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="main-card-box-row new ">
                 {orders.map((order) => (
                   <tr key={order.id} className="border-t">
                     <td className="px-3 py-2 font-medium" data-label="Order ID">

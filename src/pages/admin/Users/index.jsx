@@ -121,7 +121,7 @@ export default function UserList() {
         {/* Users Table */}
         <div className="overflow-x-auto">
     
-            <table className="min-w-full text-sm">
+            <table className="min-w-full text-sm responsive">
               <thead>
                 <tr>
                   <th className="text-left font-medium px-3 py-2">ID</th>
@@ -132,17 +132,17 @@ export default function UserList() {
                   <th className="text-center font-medium px-3 py-2">Actions</th>
                 </tr>
               </thead>
-              <tbody className="main-card-box-row">
+              <tbody className="main-card-box-row new ">
                 {users.map((u) => (
                   <tr key={u.id} className="border-t">
-                    <td className="px-3 py-2">{u.id}</td>
-                    <td className="px-3 py-2 font-medium">{u.name}</td>
-                    <td className="px-3 py-2 break-all">{u.email}</td>
-                    <td className="px-3 py-2">{u.phone || "-"}</td>
-                    <td className="px-3 py-2">{u.role}</td>
-                    <td className="px-3 py-2 text-center">
+                    <td className="px-3 py-2 capitalize" data-label="ID">{u.id}</td>
+                    <td className="px-3 py-2 font-medium capitalize" data-label="Name">{u.name}</td>
+                    <td className="px-3 py-2 break-all capitalize" data-label="Email">{u.email}</td>
+                    <td className="px-3 py-2 capitalize" data-label="Phone">{u.phone || "-"}</td>
+                    <td className="px-3 py-2 capitalize" data-label="Role">{u.role}</td>
+                    <td className="px-3 py-2 text-center capitalize" data-label="Action">
                       {user.id !== u.id && 
-                      <div className="flex justify-center gap-1">
+                      <div className="mobile-action-btns flex xl:justify-center gap-1">
                         <Link
                           to={`/dashboard/users/edit/${u.id}`}
                           className="px-2 py-1 rounded bg-black text-white text-sm flex items-center justify-center"

@@ -262,7 +262,7 @@ details.dropdown[open] .menu{ display:block; }
 }
 .mobile-action-btns {
     display: flex;
-    justify-content: center;
+    justify-content: left;
 }
 .dashboard-sidebar {
     width: 20%!important;

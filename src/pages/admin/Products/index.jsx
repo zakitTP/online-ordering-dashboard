@@ -76,7 +76,7 @@ export default function ProductList() {
             <div className="flex items-start gap-3">
              
               <div className="flex-1">
-                <h3 className="text-xl text-black font-bold">Delete item?</h3>
+                <h3 className="text-2xl text-black font-bold">Delete item?</h3>
                 <p className="text-base text-black my-3">Are you sure you want to delete this product?</p>
               </div>
             </div>
@@ -160,9 +160,9 @@ export default function ProductList() {
                     <th className="text-center font-medium px-3 py-2">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="main-card-box-row">
                   {products.map((p) => (
-                    <tr key={p.id} className="border-t">
+                    <tr key={p.id} className="border-t md:!mb-0">
                       <td className="px-3 py-2" data-label="ID">{p.id}</td>
                       <td className="px-3 py-2" data-label="Image">
                         {p.image_url && (

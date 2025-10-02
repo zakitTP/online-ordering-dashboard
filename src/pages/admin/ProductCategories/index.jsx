@@ -107,11 +107,11 @@ export default function CategoriesPage() {
                   </tr>
                 ) : (
                   categories.map((cat) => (
-                    <tr key={cat.id} className="border-t hover:bg-gray-50">
+                    <tr key={cat.id} className="border-t hover:bg-gray-50 md:!mb-0">
                       <td className="px-3 py-2" data-label="ID">{cat.id}</td>
                       <td className="px-3 py-2 font-medium" data-label="Category">{cat.name}</td>
                       <td className="px-3 py-2 text-center" data-label="Actions">
-                        <div className="flex justify-center gap-1">
+                        <div className="mobile-action-btns flex lg:justify-center gap-1">
                       
                           <button
                             onClick={() => { setSelectedCategory(cat); setShowDeleteModal(true); }}
@@ -198,7 +198,7 @@ export default function CategoriesPage() {
       {showDeleteModal && selectedCategory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow w-96">
-            <h2 className="text-xl text-black font-bold">Are you sure?</h2>
+            <h2 className="text-2xl text-black font-bold">Are you sure?</h2>
             <p className="text-base text-black my-3">
               Do you really want to delete <strong>{selectedCategory.name}</strong>?
             </p>

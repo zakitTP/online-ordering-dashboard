@@ -379,31 +379,31 @@ const AddForm = () => {
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
             {formData.status === "publish" && (
               <>
-                <h2 className="text-xl font-bold mb-4">Access Code</h2>
+                <h2 className="text-2xl text-black font-bold mb-2">Access Code</h2>
                 <div className="flex justify-center gap-2 mb-4">
                   <p className="break-words">{modalContent.accessCode}</p>
                   <button
                     onClick={() => handleCopy(modalContent.accessCode)}
-                    className="bg-blue-600 text-white px-2 py-1 rounded flex items-center gap-1"
+                    className="bg-black text-white px-2 py-1 rounded flex items-center gap-1"
                   >
                     <FaCopy /> Copy
                   </button>
                 </div>
               </>
             )}
-            <h2 className="text-xl font-bold mb-4">Form URL</h2>
+            <h2 className="text-2xl text-black font-bold mb-2">Form URL</h2>
             <div className="flex justify-center gap-2 mb-4">
-              <p className="break-words">{modalContent.formUrl}</p>
+              <p className="break-words w-[85%]">{modalContent.formUrl}</p>
               <button
                 onClick={() => handleCopy(modalContent.formUrl)}
-                className="bg-blue-600 text-white px-2 py-1 rounded flex items-center gap-1"
+                className="bg-black text-white px-2 py-1 rounded flex items-center gap-1"
               >
                 <FaCopy /> Copy
               </button>
             </div>
             <button
               onClick={handleModalOk}
-              className="bg-green-600 text-white px-6 py-2 rounded mt-2"
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
             >
               OK
             </button>
