@@ -144,7 +144,7 @@ export default function CompanySettings({ onCancel }) {
                 <p className="text-sm text-gray-500">Click to upload or drag image (PNG/JPG)</p>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative bg-[#cfcfcf] p-3 mt-1 rounded-lg">
                 <img src={logoPreview} alt="Logo Preview" className="h-32 w-full object-contain" />
                 <button
                   type="button"

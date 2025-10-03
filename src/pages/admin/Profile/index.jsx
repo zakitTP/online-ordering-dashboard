@@ -30,7 +30,9 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setFormUser(user);
-      setImagePreview(`${API_BASE_URL}/storage/${user.image}`);
+     if (user?.image) {
+    setImagePreview(`${API_BASE_URL}/storage/${user.image}`);
+  }
     }
   }, [user]);
 
