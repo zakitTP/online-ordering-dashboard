@@ -4,6 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FiEye, FiTrash2, FiSearch } from "react-icons/fi";
 import apiClient from "../../../apiClient";
+import { Link } from "react-router-dom";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -110,13 +111,14 @@ export default function Orders() {
                       data-actions
                     >
                       <div className="mobile-action-btns flex justify-center gap-2">
-                        <button
-                          className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
-                          title="View"
-                        >
-                          <FiEye />
-                       
-                        </button>
+
+                          <Link
+                            to={`/dashboard/orders/${order.id}`}
+                            className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
+                            title="View"
+                          >
+                            <FiEye />
+                          </Link>
                         <button
                           onClick={() => deleteOrder(order.id)}
                           className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
