@@ -120,19 +120,20 @@ const ProductSelection = ({
             className="relative w-full rounded border border-[#D3D1D1] bg-white text-white shadow-sm p-3 md:p-3 lg:p-4 flex flex-col gap-4"
           >
             <div className="flex justify-between items-center gap-3">
-                  <div className="">
+                  <div className="flex flex-col w-3/5 md:w-auto">
               <h3 className="text-black text-base  xl:text-lg font-semibold">
                 {p.title}
               </h3>
               <span className="block text-[14px] text-slate-500">
-              (*Extra labour req'd per screen)
-              <input
+              (*Extra labour req'd per screen) </span>
+              {/* { <input
                 type="text"
                 value="$125.00"
                 readOnly
-                className="mt-1 h-8 w-[40%]  text-[14px] rounded border border-slate-300 px-2 text-black text-center bg-gray-100"
-              />
-            </span>
+                className="mt-1 h-8  text-[14px] rounded border border-slate-300 px-2 text-black text-center bg-gray-100"
+              /> } */}
+              <span className="mt-2 text-[14px] rounded border border-slate-300 py-1 px-3 text-black text-center bg-gray-100 w-max">$125.00</span>
+            
             </div>
               {p.image_url && (
                 <img

@@ -202,7 +202,7 @@ const AddForm = () => {
   const inactiveTab = "bg-white";
 
   return (
-    <section id="wizardSection" className="">
+    <section id="wizardSection" className="border rounded-lg overflow-visible shadow-md">
       <ToastContainer position="top-right" autoClose={3000} />
       {loading && (
         <div className="fixed inset-0 bg-black/30 z-50 grid place-items-center">
@@ -291,7 +291,7 @@ const AddForm = () => {
         {/* Step 2 */}
         <section
           data-step="2"
-          className={`${activeStep === 2 ? "" : "screen-hidden hidden !mt-0"}`}
+          className={`${activeStep === 2 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
         >
           <EventInfo formData={formData} onInputChange={handleInputChange} />
 
@@ -316,7 +316,7 @@ const AddForm = () => {
         {/* Step 3 */}
         <section
           data-step="3"
-          className={`${activeStep === 3 ? "" : "screen-hidden hidden !mt-0"}`}
+          className={`${activeStep === 3 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
         >
           <h3 className="font-bold text-2xl mb-4">Product Selection</h3>
 
@@ -350,7 +350,7 @@ const AddForm = () => {
         {/* Step 4 */}
         <section
           data-step="4"
-          className={`${activeStep === 4 ? "" : "screen-hidden hidden !mt-0"}`}
+          className={`${activeStep === 4 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
         >
           <Taxes formData={formData} setFormData={setFormData} />
 
