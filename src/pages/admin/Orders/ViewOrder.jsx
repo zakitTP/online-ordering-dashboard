@@ -43,7 +43,7 @@ export default function ViewOrder() {
   const { companyInfo } = clientData;
 
   return (
-    <div className="md:p-4 p-4 space-y-6">
+    <div className="md:p-4 p-0 space-y-6">
       <Link to="/dashboard/orders" className="px-4 py-2 mb-4 inline-block rounded bg-black text-white font-semibold">
         ← Back to Orders
       </Link>
@@ -121,7 +121,7 @@ export default function ViewOrder() {
         <div className="bg-white rounded-lg shadow-sm p-3 md:p-6 mb-6 border">
           <h3 className="text-2xl font-bold text-black mb-4">Order Items</h3>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full db-back-table responsive">
               <thead>
                 <tr className="bg-gray-50">
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Item</th>
@@ -131,14 +131,14 @@ export default function ViewOrder() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Total</th>
                 </tr>
               </thead>
-              <tbody className="bg-white">
+              <tbody className="bg-white main-card-box-row ">
                 {products.map((p) => (
                   <tr key={p.id}>
-                    <td className="px-4 py-3 font-semibold">{p.title}</td>
-                    <td className="px-4 py-3">{p.category_name}</td>
-                    <td className="px-4 py-3">{order_detail.clientData.equipmentSelection.quantities[p.id] || 1}</td>
-                    <td className="px-4 py-3">${p.prepaid_price}</td>
-                    <td className="px-4 py-3">${(p.prepaid_price * (order_detail.clientData.equipmentSelection.quantities[p.id] || 1)).toFixed(2)}</td>
+                    <td className="px-4 py-3 font-semibold" data-label="Item">{p.title}</td>
+                    <td className="px-4 py-3" data-label="Category">{p.category_name}</td>
+                    <td className="px-4 py-3" data-label="Qty">{order_detail.clientData.equipmentSelection.quantities[p.id] || 1}</td>
+                    <td className="px-4 py-3" data-label="Price">${p.prepaid_price}</td>
+                    <td className="px-4 py-3" data-label="Total">${(p.prepaid_price * (order_detail.clientData.equipmentSelection.quantities[p.id] || 1)).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -185,7 +185,7 @@ export default function EditProduct() {
               type="checkbox"
               checked={product.hasExtraLabour}
               onChange={(e) => handleChange("hasExtraLabour", e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+              className="h-4 w-4 accent-[#C81A1F] border-gray-300 rounded"
             />
             <label className="text-gray-700 font-medium">Requires Extra Labour?</label>
           </div>
@@ -209,7 +209,7 @@ export default function EditProduct() {
               type="checkbox"
               checked={product.excludeConsumable}
               onChange={(e) => handleChange("excludeConsumable", e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+              className="h-4 w-4 accent-[#C81A1F] border-gray-300 rounded"
             />
             <label className="text-gray-700 font-medium">Exclude Consumable</label>
           </div>
@@ -230,7 +230,7 @@ export default function EditProduct() {
                 <button
                   type="button"
                   onClick={removeImage}
-                  className="absolute top-2 right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600"
+                  className="absolute top-2 right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600 h-8 w-8"
                 >
                   X
                 </button>

@@ -147,7 +147,7 @@ export default function ProductList() {
           <>
             {/* Products Table */}
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm responsive">
+              <table className="min-w-full text-sm db-back-table responsive">
                 <thead>
                   <tr>
                     <th className="text-left font-medium px-3 py-2">ID</th>

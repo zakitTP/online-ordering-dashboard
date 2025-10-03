@@ -74,7 +74,7 @@ export default function Orders() {
           ) : orders.length === 0 ? (
             <p className="text-center py-6">No orders found</p>
           ) : (
-            <table className="min-w-full text-sm responsive">
+            <table className="min-w-full text-sm db-back-table responsive">
               <thead>
                 <tr>
                   <th className="text-left font-medium px-3 py-2">Order ID</th>
