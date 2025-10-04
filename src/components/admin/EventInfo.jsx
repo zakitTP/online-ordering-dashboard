@@ -1,12 +1,40 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 
-const EventInfo = ({ formData, onInputChange }) => {
+const EventInfo = ({ formData, onInputChange, setFormData }) => {
   const logoPreview = useMemo(() => {
     if (formData.companyLogo instanceof File) {
       return URL.createObjectURL(formData.companyLogo);
     }
     return null;
   }, [formData.companyLogo]);
+
+  // 👉 Auto-calculate rental days whenever dates/times change
+  useEffect(() => {
+    if (
+      formData.loadInDate &&
+      formData.loadInTime &&
+      formData.finishDate &&
+      formData.finishTime
+    ) {
+      const start = new Date(`${formData.loadInDate}T${formData.loadInTime}`);
+      const end = new Date(`${formData.finishDate}T${formData.finishTime}`);
+
+      if (!isNaN(start) && !isNaN(end) && end >= start) {
+        const diffMs = end - start;
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); 
+        setFormData((prev) => ({
+          ...prev,
+          rentalDays: diffDays,
+        }));
+      }
+    }
+  }, [
+    formData.loadInDate,
+    formData.loadInTime,
+    formData.finishDate,
+    formData.finishTime,
+    setFormData,
+  ]);
 
   return (
     <>
@@ -30,13 +58,13 @@ const EventInfo = ({ formData, onInputChange }) => {
             Company Logo
           </label>
           <div className="mt-1 flex items-center gap-3">
-           {(logoPreview || formData?.companyLogoUrl) && (
-    <img
-      src={logoPreview || formData.companyLogoUrl}
-      alt="Company Logo"
-      className="h-12 w-12 object-contain border rounded"
-    />
-  )}
+            {(logoPreview || formData?.companyLogoUrl) && (
+              <img
+                src={logoPreview || formData.companyLogoUrl}
+                alt="Company Logo"
+                className="h-12 w-12 object-contain border rounded"
+              />
+            )}
 
             <input
               type="file"

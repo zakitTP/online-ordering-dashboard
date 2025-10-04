@@ -293,7 +293,7 @@ const AddForm = () => {
           data-step="2"
           className={`${activeStep === 2 ? "" : "screen-hidden hidden !mt-0"}`}
         >
-          <EventInfo formData={formData} onInputChange={handleInputChange} />
+          <EventInfo formData={formData} onInputChange={handleInputChange} setFormData={setFormData} />
 
           <div className="flex items-center justify-end gap-3 mt-8 text-xl">
             <button

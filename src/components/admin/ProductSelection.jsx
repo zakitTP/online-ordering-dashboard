@@ -34,18 +34,6 @@ const ProductSelection = ({
     };
   }, [searchTerm]);
 
-  const calculateDays = (start, end) => {
-    if (!start || !end) return 1;
-    const s = new Date(start);
-    const e = new Date(end);
-    const diff = Math.ceil((e - s) / (1000 * 60 * 60 * 24)) + 1;
-    return diff > 0 ? diff : 1;
-  };
-
-  const eventDays = useMemo(
-    () => calculateDays(eventStart, eventEnd),
-    [eventStart, eventEnd]
-  );
 
   const handleAddProduct = (product) => {
     if (selectedProducts.some((p) => p.id === product.id)) return;
@@ -65,7 +53,6 @@ const ProductSelection = ({
     }));
     setSelectedProducts((prev) => prev.filter((p) => p.id !== id));
   };
-
   return (
     <>
       {/* Search */}
@@ -157,7 +144,7 @@ const ProductSelection = ({
                   </div>
                   <input
                     type="number"
-                    value={eventDays}
+                    value={formData?.rentalDays}
                     min="1"
                     readOnly
                     className="mt-1 w-14 rounded border border-slate-300 px-2 py-1 text-center text-base bg-white"

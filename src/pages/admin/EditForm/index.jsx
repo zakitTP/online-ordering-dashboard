@@ -370,7 +370,7 @@ const saveForm = async (status) => {
         {/* Step 2 */}
         {activeStep === 2 && (
           <section>
-            <EventInfo formData={formData} onInputChange={handleInputChange} />
+            <EventInfo formData={formData} onInputChange={handleInputChange} setFormData={setFormData} />
             <div className="flex items-center justify-end gap-3 mt-8 text-xl">
               <button
                 type="button"
