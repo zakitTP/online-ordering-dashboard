@@ -107,39 +107,52 @@ const ProductSelection = ({
             className="relative w-full rounded border border-[#D3D1D1] bg-white text-white shadow-sm p-3 md:p-3 lg:p-4 flex flex-col gap-4"
           >
             <div className="flex justify-between items-center gap-3">
-              <h3 className="text-black text-base lg:text-lg xl:text-xl font-semibold">
+                  <div className="flex flex-col w-3/5 md:w-auto">
+              <h3 className="text-black text-base  xl:text-lg font-semibold">
                 {p.title}
               </h3>
+              <span className="block text-[14px] text-slate-500">
+              (*Extra labour req'd per screen) </span>
+              {/* { <input
+                type="text"
+                value="$125.00"
+                readOnly
+                className="mt-1 h-8  text-[14px] rounded border border-slate-300 px-2 text-black text-center bg-gray-100"
+              /> } */}
+              <span className="mt-2 text-[14px] rounded border border-slate-300 py-1 px-3 text-black text-center bg-gray-100 w-max">$125.00</span>
+            
+            </div>
               {p.image_url && (
                 <img
                   src={p.image_url}
                   alt={p.title}
-                  className="w-24 h-18 md:w-40 md:h-28 object-cover rounded ring-1 ring-white/10 product-select-img"
+                  className="w-24 h-18 md:w-40 md:h-24 object-cover rounded ring-1 ring-white/10 product-select-img"
                 />
               )}
             </div>
 
+
             <div className="mt-1 text-black rounded ring-1 ring-slate-200 p-2 bg-[#F6F6F6]">
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-between">
                 <div>
-                  <div className="text-base xl:text-lg text-black font-semibold">
+                  <div className="text-[14px] text-black font-semibold">
                     Prepaid Rate
                   </div>
-                  <div className="mt-1 text-sm md:text-lg font-semibold">
+                  <div className="mt-1 text-[14px] font-semibold">
                     ${p.prepaid_price}
                   </div>
                 </div>
                 <div>
-                  <div className="text-base xl:text-lg text-black font-semibold">
+                  <div className="text-[14px]  text-black font-semibold">
                     Standard Rate
                   </div>
-                  <div className="mt-1 text-sm md:text-lg font-semibold">
+                  <div className="mt-1 text-[14px]  font-semibold">
                     ${p.standard_price}
-                    <span className="text-slate-500 text-base">/day</span>
+                    <span className="text-slate-500 text-[14px]">/day</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-base xl:text-lg text-black font-semibold">
+                  <div className="text-[14px]  text-black font-semibold">
                     X Days
                   </div>
                   <input

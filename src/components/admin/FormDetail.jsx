@@ -22,7 +22,7 @@ const FormDetail = ({ formData, onInputChange }) => {
           </label>
           <input
             name="tradeshowName"
-            value={formData.tradeshowName || ""}
+            value={formData.showName || ""}
             onChange={onInputChange}
             className="mt-1 w-full rounded border border-slate-300 px-3 py-3"
             placeholder="Enter tradeshow name"

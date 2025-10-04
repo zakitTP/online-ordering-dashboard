@@ -161,7 +161,7 @@ export default function AddProduct() {
               type="checkbox"
               checked={newProduct.hasExtraLabour}
               onChange={(e) => handleChange("hasExtraLabour", e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+              className="h-4 w-4 accent-[#C81A1F] border-gray-300 rounded"
             />
             <label className="text-gray-700 font-medium">Requires Extra Labour?</label>
           </div>
@@ -187,7 +187,7 @@ export default function AddProduct() {
               type="checkbox"
               checked={newProduct.excludeConsumable}
               onChange={(e) => handleChange("excludeConsumable", e.target.checked)}
-              className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+              className="h-4 w-4 accent-[#C81A1F] border-gray-300 rounded"
             />
             <label className="text-gray-700 font-medium">Exclude Consumable</label>
           </div>

@@ -23,6 +23,7 @@ import CompanySettings from "./pages/admin/Setting";
 import Dashboard from "./pages/admin/Dashboard";
 import Profile from "./pages/admin/Profile";
 import Orders from "./pages/admin/Orders";
+import ViewOrder from "./pages/admin/Orders/ViewOrder";
 
 
 
@@ -59,6 +60,7 @@ function App() {
           <Route path="users/edit/:id" element={<EditUser />} />
           <Route path="settings" element={<CompanySettings />} />
           <Route path="orders" element={<Orders />} />
+          <Route path="orders/:id" element={<ViewOrder />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

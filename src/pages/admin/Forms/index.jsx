@@ -208,7 +208,7 @@ export default function Forms() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm responsive">
+        <table className="min-w-full text-sm   db-back-table responsive ">
           <thead>
             <tr>
               <th className="text-left font-medium px-3 py-2">Form Title</th>
@@ -318,7 +318,7 @@ export default function Forms() {
       {deleteModal.isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-xl text-black font-bold">Confirm Deletion</h3>
+            <h3 className="text-2xl text-black font-bold">Confirm Deletion</h3>
             <p className="text-base text-black my-3">
               Are you sure you want to delete the form "{deleteModal.formTitle}"? This action cannot be undone.
             </p>

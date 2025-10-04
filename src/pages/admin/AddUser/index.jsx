@@ -85,7 +85,7 @@ export default function AddUser() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-8 shadow-sm max-w-4xl mx-auto">
 

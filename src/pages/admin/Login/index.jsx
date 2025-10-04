@@ -140,15 +140,21 @@ export default function Login() {
                     Phone Number
                   </label>
                   <input
-                    id="phone"
-                    name="phone"
-                    type="text"
-                    required
-                    placeholder="+91 12345 67890"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
-                  />
+  id="phone"
+  name="phone"
+  type="text"
+  required
+  placeholder="+91 12345 67890"
+  value={phone}
+  onChange={(e) => {
+    // Allow only digits
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    setPhone(value);
+  }}
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className="w-full rounded border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
+/>
                 </div>
 
                 <button

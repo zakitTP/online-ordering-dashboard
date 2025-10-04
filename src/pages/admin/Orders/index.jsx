@@ -4,6 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FiEye, FiTrash2, FiSearch } from "react-icons/fi";
 import apiClient from "../../../apiClient";
+import { Link } from "react-router-dom";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -73,7 +74,7 @@ export default function Orders() {
           ) : orders.length === 0 ? (
             <p className="text-center py-6">No orders found</p>
           ) : (
-            <table className="min-w-full text-sm responsive">
+            <table className="min-w-full text-sm db-back-table responsive">
               <thead>
                 <tr>
                   <th className="text-left font-medium px-3 py-2">Order ID</th>
@@ -84,7 +85,7 @@ export default function Orders() {
                   <th className="text-center font-medium px-3 py-2">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="main-card-box-row new ">
                 {orders.map((order) => (
                   <tr key={order.id} className="border-t">
                     <td className="px-3 py-2 font-medium" data-label="Order ID">
@@ -110,13 +111,14 @@ export default function Orders() {
                       data-actions
                     >
                       <div className="mobile-action-btns flex justify-center gap-2">
-                        <button
-                          className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
-                          title="View"
-                        >
-                          <FiEye />
-                       
-                        </button>
+
+                          <Link
+                            to={`/dashboard/orders/${order.id}`}
+                            className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
+                            title="View"
+                          >
+                            <FiEye />
+                          </Link>
                         <button
                           onClick={() => deleteOrder(order.id)}
                           className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"

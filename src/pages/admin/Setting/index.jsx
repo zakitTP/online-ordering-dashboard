@@ -107,7 +107,7 @@ export default function CompanySettings({ onCancel }) {
   }
 
   return (
-    <div id="settings" className="view !mt-0 min-h-screen bg-gray-50 py-8 px-4">
+    <div id="settings" className="view !mt-0 min-h-screen ">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="bg-white border border-slate-200 rounded p-3 md:p-6 shadow-sm max-w-3xl mx-auto">
         <h3 className="font-bold text-black text-3xl mb-2">Company Settings</h3>
@@ -144,7 +144,7 @@ export default function CompanySettings({ onCancel }) {
                 <p className="text-sm text-gray-500">Click to upload or drag image (PNG/JPG)</p>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative bg-[#cfcfcf] p-3 mt-1 rounded-lg">
                 <img src={logoPreview} alt="Logo Preview" className="h-32 w-full object-contain" />
                 <button
                   type="button"

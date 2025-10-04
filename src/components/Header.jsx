@@ -98,7 +98,7 @@ export default function Header() {
           <button
             onClick={handleLogout}
             disabled={loading}
-            className={`px-3 md:px-5 py-3 rounded text-xl w-32 text-center ${
+            className={`px-3 md:px-5 py-3 rounded text-xl w-48 text-center ${
               loading ? "bg-gray-400 cursor-not-allowed" : "bg-black text-white"
             }`}
           >

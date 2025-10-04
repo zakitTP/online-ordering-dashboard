@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 /* ====== Desktop look (unchanged) ====== */
-table thead th{
+table.db-back-table thead th{
   background:#C81A1F !important; color:#fff !important; font-size:1.25rem !important;
 }
-table thead th:first-child{ border-top-left-radius:.5rem }
-table thead th:last-child{ border-top-right-radius:.5rem }
-table tbody td{ color:#000 !important; font-size:1rem !important }
-table tbody tr:nth-child(odd)  td{ background:#fff !important }
-table tbody tr:nth-child(even) td{ background:#f1f5f9 !important }
+table.db-back-table thead th:first-child{ border-top-left-radius:.5rem }
+table.db-back-table thead th:last-child{ border-top-right-radius:.5rem }
+table.db-back-table tbody td{ color:#000 !important; font-size:1rem !important }
+table.db-back-table tbody tr:nth-child(odd)  td{ background:#fff !important }
+table.db-back-table tbody tr:nth-child(even) td{ background:#f1f5f9 !important }
 
 .thumb{ width:2.5rem; height:2.5rem; object-fit:cover; border-radius:.5rem; border:1px solid #e2e8f0; background:#f8fafc }
 .screen-hidden{ display:none }
@@ -53,13 +53,13 @@ details.dropdown[open] .menu{ display:block; }
 @media (max-width:768px){
 
   /* Hide header & stack rows */
-  table.responsive thead{ display:none; }
-  table.responsive,
-  table.responsive tbody,
-  table.responsive tr{ display:block; }
+  table.db-back-table.responsive thead{ display:none; }
+  table.db-back-table.responsive,
+  table.db-back-table.responsive tbody,
+  table.db-back-table.responsive tr{ display:block; }
 
   /* Row as a rounded card */
-  table.responsive tbody tr{
+  table.db-back-table.responsive tbody tr{
     border:1px solid rgb(226 232 240);     /* slate-200 */
     border-radius:.75rem;                  /* rounded-xl */
     background:#fff;
@@ -69,8 +69,8 @@ details.dropdown[open] .menu{ display:block; }
   }
 
   /* Each cell becomes one line in the card */
-  table.responsive th,
-  table.responsive td{
+  table.db-back-table.responsive th,
+  table.db-back-table.responsive td{
     display:flex;
     align-items:center;
     gap:.75rem;
@@ -81,35 +81,35 @@ details.dropdown[open] .menu{ display:block; }
   }
 
   /* Soft dividers between lines */
-  table.responsive td + td{ border-top:1px solid #EEF2F7; }
-  table.responsive tr > td:first-child{ padding-top:1rem !important; }
-  table.responsive tr > td:last-child{  padding-bottom:1rem !important; }
+  table.db-back-table.responsive td + td{ border-top:1px solid #EEF2F7; }
+  table.db-back-table.responsive tr > td:first-child{ padding-top:1rem !important; }
+  table.db-back-table.responsive tr > td:last-child{  padding-bottom:1rem !important; }
 
   /* 35/65 split with label + colon */
-  table.responsive th::before,
-  table.responsive td::before{
+  table.db-back-table.responsive th::before,
+  table.db-back-table.responsive td::before{
     content: attr(data-label) " :";
     flex:0 0 45%;
     max-width:45%;
     font-weight:700;
     color:#1f2937;
   }
-  table.responsive th > *,
-  table.responsive td > *{
+  table.db-back-table.responsive th > *,
+  table.db-back-table.responsive td > *{
     flex:0 0 65%;
     max-width:65%;
   }
 
   /* Actions row as flexible buttons */
-  table.responsive td[data-actions]{
+  table.db-back-table.responsive td[data-actions]{
     display:flex;
     flex-wrap:wrap;
     gap:.5rem;
   }
-  table.responsive td[data-actions]::before{
+  table.db-back-table.responsive td[data-actions]::before{
     margin-bottom:.25rem;
   }
-  table.responsive td[data-actions] > *{
+  table.db-back-table.responsive td[data-actions] > *{
     flex:0 0 auto;
   }
   .form-status{
@@ -119,7 +119,7 @@ details.dropdown[open] .menu{ display:block; }
   }
 
   /* Optional: pill-like buttons */
-  table.responsive td [class*="px-2"].rounded{ border-radius:.5rem !important; }
+  table.db-back-table.responsive td [class*="px-2"].rounded{ border-radius:.5rem !important; }
 
   .mobile-tax-box{
     display: flex!important;
@@ -150,13 +150,13 @@ details.dropdown[open] .menu{ display:block; }
     }
     
   /* Hide header & stack rows */
-  table.responsive thead{ display:none; }
-  table.responsive,
-  table.responsive tbody,
-  table.responsive tr{ display:block; }
+  table.db-back-table.responsive thead{ display:none; }
+  table.db-back-table.responsive,
+  table.db-back-table.responsive tbody,
+  table.db-back-table.responsive tr{ display:block; }
 
   /* Row as a rounded card */
-  table.responsive tbody tr{
+  table.db-back-table.responsive tbody tr{
     border:1px solid rgb(226 232 240);     
     border-radius:.75rem;                  
     background:#fff;
@@ -166,8 +166,8 @@ details.dropdown[open] .menu{ display:block; }
   }
 
   /* Each cell becomes one line in the card */
-  table.responsive th,
-  table.responsive td{
+  table.db-back-table.responsive th,
+  table.db-back-table.responsive td{
     display:flex;
     align-items:center;
     gap:.75rem;
@@ -178,35 +178,35 @@ details.dropdown[open] .menu{ display:block; }
   }
 
   /* Soft dividers between lines */
-  table.responsive td + td{ border-top:1px solid #EEF2F7; }
-  table.responsive tr > td:first-child{ padding-top:1rem !important; }
-  table.responsive tr > td:last-child{  padding-bottom:1rem !important; }
+  table.db-back-table.responsive td + td{ border-top:1px solid #EEF2F7; }
+  table.db-back-table.responsive tr > td:first-child{ padding-top:1rem !important; }
+  table.db-back-table.responsive tr > td:last-child{  padding-bottom:1rem !important; }
 
   /* 35/65 split with label + colon */
-  table.responsive th::before,
-  table.responsive td::before{
+  table.db-back-table.responsive th::before,
+  table.db-back-table.responsive td::before{
     content: attr(data-label) " :";
     flex:0 0 45%;
     max-width:45%;
     font-weight:700;
     color:#1f2937;
   }
-  table.responsive th > *,
-  table.responsive td > *{
+  table.db-back-table.responsive th > *,
+  table.db-back-table.responsive td > *{
     flex:0 0 65%;
     max-width:65%;
   }
 
   /* Actions row as flexible buttons */
-  table.responsive td[data-actions]{
+  table.db-back-table.responsive td[data-actions]{
     display:flex;
     flex-wrap:wrap;
     gap:.5rem;
   }
-  table.responsive td[data-actions]::before{
+  table.db-back-table.responsive td[data-actions]::before{
     margin-bottom:.25rem;
   }
-  table.responsive td[data-actions] > *{
+  table.db-back-table.responsive td[data-actions] > *{
     flex:0 0 auto;
   }
   .form-status{
@@ -216,7 +216,7 @@ details.dropdown[open] .menu{ display:block; }
   }
 
   /* Optional: pill-like buttons */
-  table.responsive td [class*="px-2"].rounded{ border-radius:.5rem !important; }
+  table.db-back-table.responsive td [class*="px-2"].rounded{ border-radius:.5rem !important; }
 
   .main-card-box-row{
     display: flex!important;
@@ -231,7 +231,7 @@ details.dropdown[open] .menu{ display:block; }
     border-radius: 8px;
     box-sizing: border-box;
     }
-    table tbody tr:nth-child(even) td {
+    table.db-back-table tbody tr:nth-child(even) td {
     background: #fff !important;
 }
 .product-card-img{
@@ -262,7 +262,7 @@ details.dropdown[open] .menu{ display:block; }
 }
 .mobile-action-btns {
     display: flex;
-    justify-content: center;
+    justify-content: left;
 }
 .dashboard-sidebar {
     width: 20%!important;
