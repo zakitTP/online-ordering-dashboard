@@ -3,7 +3,7 @@ import React from "react";
 const FormDetail = ({ formData, onInputChange }) => {
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols gap-4">
         <div>
           <label className="text-base lg:text-lg text-black font-medium">
             Form Title
@@ -16,7 +16,7 @@ const FormDetail = ({ formData, onInputChange }) => {
             placeholder="Enter form title"
           />
         </div>
-        <div>
+        {/* <div>
           <label className="text-base lg:text-lg text-black font-medium">
             Tradeshow Name
           </label>
@@ -27,7 +27,7 @@ const FormDetail = ({ formData, onInputChange }) => {
             className="mt-1 w-full rounded border border-slate-300 px-3 py-3"
             placeholder="Enter tradeshow name"
           />
-        </div>
+        </div> */}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
