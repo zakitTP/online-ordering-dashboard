@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,6 +8,10 @@ import { Link } from "react-router-dom";
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // State for delete modal
+  const [deleteId, setDeleteId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Fetch all orders
   const fetchOrders = async () => {
@@ -24,14 +27,18 @@ export default function Orders() {
   };
 
   // Delete order
-  const deleteOrder = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this order?")) return;
+  const handleDelete = async () => {
+    if (!deleteId) return;
     try {
-      await apiClient.delete(`/api//orders/${id}`);
+      setDeleteLoading(true);
+      await apiClient.delete(`/api/orders/${deleteId}`);
       toast.success("Order deleted successfully");
-      setOrders((prev) => prev.filter((o) => o.id !== id));
+      setOrders((prev) => prev.filter((o) => o.id !== deleteId));
+      setDeleteId(null);
     } catch (err) {
       toast.error("Failed to delete order");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -47,7 +54,7 @@ export default function Orders() {
           <h3 className="font-bold text-black text-3xl">Orders</h3>
         </div>
 
-        {/* Filters (non-functional yet) */}
+        {/* Filters */}
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-4">
           <div className="flex items-center gap-2 px-3 py-2 rounded border border-slate-300">
             <FiSearch className="text-slate-500" />
@@ -68,9 +75,9 @@ export default function Orders() {
         {/* Table */}
         <div className="overflow-x-auto">
           {loading ? (
-              <div className="flex items-center justify-center min-h-screen">
-       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
-      </div>
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
+            </div>
           ) : orders.length === 0 ? (
             <p className="text-center py-6">No orders found</p>
           ) : (
@@ -85,7 +92,7 @@ export default function Orders() {
                   <th className="text-center font-medium px-3 py-2">Actions</th>
                 </tr>
               </thead>
-              <tbody className="main-card-box-row new ">
+              <tbody className="main-card-box-row new">
                 {orders.map((order) => (
                   <tr key={order.id} className="border-t">
                     <td className="px-3 py-2 font-medium" data-label="Order ID">
@@ -105,27 +112,21 @@ export default function Orders() {
                     <td className="px-3 py-2" data-label="Date">
                       {new Date(order.created_at).toLocaleDateString()}
                     </td>
-                    <td
-                      className="px-3 py-2 text-center"
-                      data-label="Actions"
-                      data-actions
-                    >
+                    <td className="px-3 py-2 text-center" data-label="Actions">
                       <div className="mobile-action-btns flex justify-center gap-2">
-
-                          <Link
-                            to={`/dashboard/orders/${order.id}`}
-                            className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
-                            title="View"
-                          >
-                            <FiEye />
-                          </Link>
+                        <Link
+                          to={`/dashboard/orders/${order.id}`}
+                          className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
+                          title="View"
+                        >
+                          <FiEye />
+                        </Link>
                         <button
-                          onClick={() => deleteOrder(order.id)}
+                          onClick={() => setDeleteId(order.id)}
                           className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
                           title="Delete"
                         >
                           <FiTrash2 />
-                          
                         </button>
                       </div>
                     </td>
@@ -134,11 +135,41 @@ export default function Orders() {
               </tbody>
             </table>
           )}
-
-          
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md mx-4 rounded-lg border border-slate-200 bg-white shadow-xl p-6">
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <h3 className="text-2xl text-black font-bold">Delete order?</h3>
+                <p className="text-base text-black my-3">
+                  Are you sure you want to delete this order?
+                </p>
+              </div>
+            </div>
+            <div className="mt-1 flex items-center justify-end gap-2">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteLoading}
+                className={`px-3 md:px-5 py-3 rounded bg-black text-white text-xl w-32 text-center ${
+                  deleteLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {deleteLoading ? "Deleting..." : "OK"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
