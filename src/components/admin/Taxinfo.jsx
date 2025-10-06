@@ -3,19 +3,32 @@ import {
   FaBan,
   FaPercent,
   FaReceipt,
-  FaCalendarDays,
   FaFileInvoiceDollar,
+  FaCalendarDays,
   FaSliders,
-  FaCircleCheck,
+  FaCircleCheck 
 } from "react-icons/fa6";
 
 const presetOptions = [
   { key: "none", label: "No Tax", icon: FaBan, rate: 0 },
-  { key: "gst5", label: "GST 5%", icon: FaPercent, rate: 5, sub: "Standard goods & services" },
-  { key: "gst12", label: "GST 12%", icon: FaReceipt, rate: 12, sub: "Selected categories" },
-  { key: "gst18", label: "GST 18%", icon: FaCalendarDays, rate: 18, sub: "Common services" },
-  { key: "vat20", label: "VAT 20%", icon: FaFileInvoiceDollar, rate: 20, sub: "Value-added tax" },
-  { key: "custom", label: "Custom", icon: FaSliders, rate: null, custom: true },
+
+  { key: "ab_gst", label: "AB GST (5%)", icon: FaPercent, rate: 5 },
+  { key: "bc_gst", label: "BC GST (5%)", icon: FaPercent, rate: 5 },
+  { key: "gst_only", label: "GST ONLY (5%)", icon: FaPercent, rate: 5 },
+  { key: "hst_on", label: "HST ON (13%)", icon: FaReceipt, rate: 13 },
+  { key: "mb_gst", label: "MB GST (5%)", icon: FaPercent, rate: 5 },
+  { key: "nb_hst", label: "NB HST (15%)", icon: FaReceipt, rate: 15 },
+  { key: "nl_hst", label: "NL HST (15%)", icon: FaReceipt, rate: 15 },
+  { key: "ns_hst", label: "NS HST (14%)", icon: FaReceipt, rate: 14 },
+  { key: "nu_gst", label: "NU GST (5%)", icon: FaPercent, rate: 5 },
+  { key: "nw_gst", label: "NW GST (5%)", icon: FaPercent, rate: 5 },
+  { key: "pe_hst", label: "PE HST (15%)", icon: FaReceipt, rate: 15 },
+  { key: "qc_gst", label: "QC GST (5%)", icon: FaPercent, rate: 5 },
+  { key: "sk_gst", label: "SK GST (5%)", icon: FaPercent, rate: 5 },
+  { key: "yt_gst", label: "YT GST (5%)", icon: FaPercent, rate: 5 },
+
+  // Optional: add a custom option
+  { key: "custom", label: "Custom Tax", icon: FaSliders, rate: null, custom: true },
 ];
 
 const Taxes = ({ formData, setFormData }) => {
