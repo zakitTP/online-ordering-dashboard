@@ -112,15 +112,24 @@ const ProductSelection = ({
               <h3 className="text-black text-base  xl:text-lg font-semibold">
                 {p.title}
               </h3>
-              <span className="block text-[14px] text-slate-500">
-              (*Extra labour req'd per screen) </span>
+              
               {/* { <input
                 type="text"
                 value="$125.00"
                 readOnly
                 className="mt-1 h-8  text-[14px] rounded border border-slate-300 px-2 text-black text-center bg-gray-100"
               /> } */}
-              <span className="mt-2 text-[14px] rounded border border-slate-300 py-1 px-3 text-black text-center bg-gray-100 w-max">${p.labour_price}</span>
+              {p.labour_price > 0 && (
+  <>
+    <span className="block text-[14px] text-slate-500">
+      (*Extra labour req'd per day)
+    </span>
+    <span className="mt-2 text-[14px] rounded border border-slate-300 py-1 px-3 text-black text-center bg-gray-100 w-max">
+      ${p.labour_price}
+    </span>
+  </>
+)}
+
             
             </div>
               {p.image_url && (

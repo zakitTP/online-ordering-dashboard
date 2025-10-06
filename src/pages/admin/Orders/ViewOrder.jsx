@@ -40,7 +40,7 @@ export default function ViewOrder() {
     );
 
   if (!order) return <p className="text-center py-6">Order not found</p>;
-
+console.log(order);
   // Destructure order safely
   const order_detail = order?.order_detail || {};
   const formData = order_detail?.formData || {};
@@ -83,12 +83,13 @@ export default function ViewOrder() {
     <div className="md:p-4 p-0 space-y-6">
       <ToastContainer position="top-right" autoClose={3000} />
 
+      <div className="pb-4">
       <Link
         to="/dashboard/orders"
-        className="px-4 py-2 mb-4 inline-block rounded bg-black text-white font-semibold"
+        className="px-4 py-2  inline-block rounded bg-black text-white font-semibold"
       >
         ← Back to Orders
-      </Link>
+      </Link></div>
 
       <div className="view !mt-0">
         {/* Order Header */}
@@ -213,7 +214,17 @@ export default function ViewOrder() {
               <tbody className="bg-white main-card-box-row">
                 {products.map((p) => (
                   <tr key={p.id}>
-                    <td className="px-4 py-3 font-semibold" data-label="Item">{p.title}</td>
+                   <td className="px-4 py-3 font-semibold" data-label="Item">
+  <p>
+    {p.title}
+    {p.labour_price > 0 && (
+      <span className="text-[12px] md:text-[14px] text-slate-500">
+        (*Extra labour req'd per day) ({p.labour_price})
+      </span>
+    )}
+  </p>
+</td>
+
                     <td className="px-4 py-3" data-label="Category">{p.category_name}</td>
                     <td className="px-4 py-3" data-label="Qty">{quantities[p.id] || 1}</td>
                     <td className="px-4 py-3" data-label="Price">${p.prepaid_price}</td>
