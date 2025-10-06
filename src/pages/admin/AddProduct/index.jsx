@@ -75,7 +75,7 @@ export default function AddProduct() {
     formData.append("standard_price", newProduct.standardPrice || 0);
     formData.append("has_labour_price", newProduct.hasExtraLabour ? 1 : 0);
     formData.append("labour_price", newProduct.hasExtraLabour ? newProduct.extraLabourCost || 0 : 0);
-    formData.append("exclude_consumable", newProduct.excludeConsumable ? 1 : 0);
+    formData.append("exclude_consumables", newProduct.excludeConsumable ? 1 : 0);
     formData.append("image", newProduct.image);
 
     setLoading(true);

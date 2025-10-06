@@ -46,7 +46,7 @@ export default function EditProduct() {
           standardPrice: data.standard_price,
           hasExtraLabour: !!data.has_labour_price,
           extraLabourCost: data.labour_price,
-          excludeConsumable: !!data.exclude_consumable,
+          excludeConsumable: !!data.exclude_consumables,
         });
         setImagePreview(data.image_url);
         setCategories(catRes.data);
@@ -91,7 +91,7 @@ export default function EditProduct() {
     formData.append("standard_price", product.standardPrice || 0);
     formData.append("has_labour_price", product.hasExtraLabour ? 1 : 0);
     formData.append("labour_price", product.hasExtraLabour ? product.extraLabourCost || 0 : 0);
-    formData.append("exclude_consumable", product.excludeConsumable ? 1 : 0);
+    formData.append("exclude_consumables", product.excludeConsumable ? 1 : 0);
     if (product.image) formData.append("image", product.image);
 
     setSubmitLoading(true);
