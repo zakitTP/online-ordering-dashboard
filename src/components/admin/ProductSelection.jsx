@@ -20,6 +20,7 @@ const ProductSelection = ({
           const res = await apiClient.get(
             `/api/products?search=${encodeURIComponent(searchTerm)}`
           );
+           console.log("🔍 API Response Data:", res.data); // 👈 log full response
           if (!cancelled) setSearchResults(res.data.data || []);
         } catch (e) {
           if (!cancelled) setSearchResults([]);
@@ -119,7 +120,7 @@ const ProductSelection = ({
                 readOnly
                 className="mt-1 h-8  text-[14px] rounded border border-slate-300 px-2 text-black text-center bg-gray-100"
               /> } */}
-              <span className="mt-2 text-[14px] rounded border border-slate-300 py-1 px-3 text-black text-center bg-gray-100 w-max">$125.00</span>
+              <span className="mt-2 text-[14px] rounded border border-slate-300 py-1 px-3 text-black text-center bg-gray-100 w-max">${p.labour_price}</span>
             
             </div>
               {p.image_url && (

@@ -144,7 +144,7 @@ export default function Login() {
   name="phone"
   type="text"
   required
-  placeholder="+91 12345 67890"
+  placeholder="91 12345 67890"
   value={phone}
   onChange={(e) => {
     // Allow only digits

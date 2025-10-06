@@ -1,21 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import apiClient from "../../../apiClient";
 import "react-toastify/dist/ReactToastify.css";
-import { FaPhone, FaEnvelope, FaReceipt, FaUndoAlt, FaTimes } from "react-icons/fa";
+import { FaPhone, FaEnvelope, FaUndoAlt, FaTimes } from "react-icons/fa";
 
 export default function ViewOrder() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showRefundPopup, setShowRefundPopup] = useState(false);
+  const [refundType, setRefundType] = useState("full");
+  const [refundAmount, setRefundAmount] = useState(0);
 
+  // Fetch order
   const fetchOrder = async () => {
     try {
       setLoading(true);
       const res = await apiClient.get(`/api/orders/${id}`);
       setOrder(res.data);
-      console.log("Fetched order:", res.data); // debug
+      setRefundAmount(res.data?.total_amount || 0); // default refund amount
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch order");
@@ -37,14 +41,52 @@ export default function ViewOrder() {
 
   if (!order) return <p className="text-center py-6">Order not found</p>;
 
-  const { order_detail, transaction_detail, status, total_amount } = order;
-  const { formData, clientData, taxes, adminFees, insurance, labourCharge, deliveryPickup, equipmentTotal, consumablesTotal, mountLabour } = order_detail;
-  const { products, event_info, company_name, contact_name, contact_email, contact_phone, company_logo } = formData;
-  const { companyInfo } = clientData;
+  // Destructure order safely
+  const order_detail = order?.order_detail || {};
+  const formData = order_detail?.formData || {};
+  const clientData = order_detail?.clientData || {};
+  const products = formData?.products || [];
+  const event_info = formData?.event_info || {};
+  const companyInfo = clientData?.companyInfo || {};
+  const status = order?.status || "N/A";
+  const total_amount = order?.total_amount || 0;
+
+  const equipmentTotal = order_detail?.equipmentTotal || 0;
+  const labourCharge = order_detail?.labourCharge || 0;
+  const adminFees = order_detail?.adminFees || 0;
+  const insurance = order_detail?.insurance || 0;
+  const taxes = order_detail?.taxes || 0;
+  const deliveryPickup = order_detail?.deliveryPickup || 0;
+  const quantities = clientData?.equipmentSelection?.quantities || {};
+
+  // Handle refund type change
+  const handleRefundTypeChange = (e) => {
+    const type = e.target.value;
+    setRefundType(type);
+    if (type === "full") setRefundAmount(total_amount);
+    if (type === "partial") setRefundAmount(0);
+  };
+
+  // Handle refund submission
+  const handleRefundSubmit = (e) => {
+    e.preventDefault();
+    if (refundAmount <= 0) {
+      toast.error("Refund amount must be greater than zero");
+      return;
+    }
+    // TODO: Call API to process refund
+    toast.success(`Refund of $${refundAmount} processed successfully!`);
+    setShowRefundPopup(false);
+  };
 
   return (
     <div className="md:p-4 p-0 space-y-6">
-      <Link to="/dashboard/orders" className="px-4 py-2 mb-4 inline-block rounded bg-black text-white font-semibold">
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <Link
+        to="/dashboard/orders"
+        className="px-4 py-2 mb-4 inline-block rounded bg-black text-white font-semibold"
+      >
         ← Back to Orders
       </Link>
 
@@ -57,28 +99,53 @@ export default function ViewOrder() {
             <p className="text-black mt-1">{event_info.showName}</p>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3">
-            <button className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center">
+            <button
+              onClick={() => setShowRefundPopup(true)}
+              className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center"
+            >
               <FaUndoAlt className="mr-2" /> Process Refund
             </button>
           </div>
         </div>
 
-        {/* Order Summary */}
+        {/* Order Summary, Customer Info, Event Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-3 md:mb-6">
+          {/* Order Summary */}
           <div className="bg-[#eeeeee] rounded-lg shadow-sm p-6 text-black">
-            <h3 className="text-[22px] font-bold text-black mb-4 pb-2 border-b">Order Summary</h3>
+            <h3 className="text-[22px] font-bold text-black mb-4 pb-2 border-b">
+              Order Summary
+            </h3>
             <div className="space-y-3">
-              <div className="flex justify-between"><span>Order ID:</span><span className="font-medium">#{order.id}</span></div>
-              <div className="flex justify-between"><span>Date:</span><span className="font-medium">{new Date(order.created_at).toLocaleDateString()}</span></div>
-              <div className="flex justify-between"><span>Status:</span><span className={`status-badge status-${status}`}>{status}</span></div>
-              <div className="flex justify-between"><span>Payment Method:</span><span className="font-medium">{order.payment_method || "N/A"}</span></div>
-              <div className="flex justify-between"><span>Amount:</span><span className="font-medium">${total_amount}</span></div>
+              <div className="flex justify-between">
+                <span>Order ID:</span>
+                <span className="font-medium">#{order.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Date:</span>
+                <span className="font-medium">
+                  {new Date(order.created_at).toLocaleDateString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Status:</span>
+                <span className={`status-badge status-${status}`}>{status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Payment Method:</span>
+                <span className="font-medium">{order.payment_method || "N/A"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Amount:</span>
+                <span className="font-medium">${total_amount}</span>
+              </div>
             </div>
           </div>
 
           {/* Customer Info */}
           <div className="bg-[#eeeeee] rounded-lg shadow-sm p-6 text-black">
-            <h3 className="text-[22px] font-bold text-black mb-4 pb-2 border-b">Customer Information</h3>
+            <h3 className="text-[22px] font-bold text-black mb-4 pb-2 border-b">
+              Customer Information
+            </h3>
             <div className="space-y-3">
               <div>
                 <p className="text-lg font-medium">{companyInfo.companyName}</p>
@@ -86,35 +153,47 @@ export default function ViewOrder() {
               </div>
               <div>
                 <p className="text-black">{companyInfo.address1}</p>
-                <p className="text-black">{companyInfo.city}, {companyInfo.state} {companyInfo.zipCode}</p>
+                <p className="text-black">
+                  {companyInfo.city}, {companyInfo.state} {companyInfo.zipCode}
+                </p>
                 <p className="text-black">{companyInfo.country}</p>
               </div>
               <div className="pt-2">
-                <p className="text-black font-medium flex items-center"><FaPhone className="text-[#C81A1F] mr-2" /> {companyInfo.contactPhone}</p>
-                <p className="text-black font-medium flex items-center"><FaEnvelope className="text-[#C81A1F] mr-2" /> {companyInfo.email}</p>
+                <p className="text-black font-medium flex items-center">
+                  <FaPhone className="text-[#C81A1F] mr-2" /> {companyInfo.contactPhone}
+                </p>
+                <p className="text-black font-medium flex items-center">
+                  <FaEnvelope className="text-[#C81A1F] mr-2" /> {companyInfo.email}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Event Info */}
-
           <div className="bg-[#eeeeee] rounded-lg shadow-sm p-6 text-black">
-                <h3 className="text-[22px] font-bold text-black mb-4 pb-2 border-b">Event Details</h3>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-lg font-medium">{event_info.showName}</p>
-                    <p className="text-black">{event_info.facility}</p>
-                  </div>
-                  <div>
-                    <p className="text-black hidden"><span className="font-medium">Booth:</span> {event_info.room}</p>
-                    <p className="text-black"><span className="font-medium">Room:</span> {event_info.room}</p>
-                  </div>
-                  <div className="pt-2">
-                    <p className="text-black"><span className="font-medium">Load In:</span> {event_info.loadInDate} at {event_info.loadInTime}</p>
-                    <p className="text-black"><span className="font-medium">Event:</span> {event_info.startDate} at {event_info.startTime} - {event_info.finishDate} at {event_info.finishTime}</p>
-                  </div>
-                </div>
+            <h3 className="text-[22px] font-bold text-black mb-4 pb-2 border-b">
+              Event Details
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-lg font-medium">{event_info.showName}</p>
+                <p className="text-black">{event_info.facility}</p>
               </div>
+              <div>
+                <p className="text-black">
+                  <span className="font-medium">Room:</span> {event_info.room}
+                </p>
+              </div>
+              <div className="pt-2">
+                <p className="text-black">
+                  <span className="font-medium">Load In:</span> {event_info.loadInDate} at {event_info.loadInTime}
+                </p>
+                <p className="text-black">
+                  <span className="font-medium">Event:</span> {event_info.startDate} at {event_info.startTime} - {event_info.finishDate} at {event_info.finishTime}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Order Items */}
@@ -131,14 +210,14 @@ export default function ViewOrder() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Total</th>
                 </tr>
               </thead>
-              <tbody className="bg-white main-card-box-row ">
+              <tbody className="bg-white main-card-box-row">
                 {products.map((p) => (
                   <tr key={p.id}>
                     <td className="px-4 py-3 font-semibold" data-label="Item">{p.title}</td>
                     <td className="px-4 py-3" data-label="Category">{p.category_name}</td>
-                    <td className="px-4 py-3" data-label="Qty">{order_detail.clientData.equipmentSelection.quantities[p.id] || 1}</td>
+                    <td className="px-4 py-3" data-label="Qty">{quantities[p.id] || 1}</td>
                     <td className="px-4 py-3" data-label="Price">${p.prepaid_price}</td>
-                    <td className="px-4 py-3" data-label="Total">${(p.prepaid_price * (order_detail.clientData.equipmentSelection.quantities[p.id] || 1)).toFixed(2)}</td>
+                    <td className="px-4 py-3" data-label="Total">${(p.prepaid_price * (quantities[p.id] || 1)).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -146,17 +225,137 @@ export default function ViewOrder() {
           </div>
 
           {/* Totals */}
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex justify-between mb-2"><span className="text-black font-medium">Equipment Total</span><span>${equipmentTotal}</span></div>
-            <div className="flex justify-between mb-2"><span className="text-black font-medium">Labour Charge</span><span>${labourCharge}</span></div>
-            <div className="flex justify-between mb-2"><span className="text-black font-medium">Admin Fees</span><span>${adminFees}</span></div>
-            <div className="flex justify-between mb-2"><span className="text-black font-medium">Insurance</span><span>${insurance}</span></div>
-            <div className="flex justify-between mb-2"><span className="text-black font-medium">Taxes</span><span>${taxes}</span></div>
-            <div className="flex justify-between mb-2"><span className="text-black font-medium">Delivery/Pickup</span><span>${deliveryPickup}</span></div>
+          <div className="mt-4 pt-4 border-t space-y-2">
+            <div className="flex justify-between"><span className="text-black font-medium">Equipment Total</span><span>${equipmentTotal}</span></div>
+            <div className="flex justify-between"><span className="text-black font-medium">Labour Charge</span><span>${labourCharge}</span></div>
+            <div className="flex justify-between"><span className="text-black font-medium">Admin Fees</span><span>${adminFees}</span></div>
+            <div className="flex justify-between"><span className="text-black font-medium">Insurance</span><span>${insurance}</span></div>
+            <div className="flex justify-between"><span className="text-black font-medium">Taxes</span><span>${taxes}</span></div>
+            <div className="flex justify-between"><span className="text-black font-medium">Delivery/Pickup</span><span>${deliveryPickup}</span></div>
             <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t"><span>Total Payment</span><span>${total_amount}</span></div>
           </div>
         </div>
       </div>
+
+      {/* Refund Popup */}
+      {showRefundPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold text-black">Process Refund</h3>
+                <button
+                  onClick={() => setShowRefundPopup(false)}
+                  className="text-brand-600 text-xl hover:text-gray-700"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form onSubmit={handleRefundSubmit}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label className="block text-base lg:text-lg text-black font-medium">Refund Type</label>
+                    <select
+                      value={refundType}
+                      onChange={handleRefundTypeChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="full">Full Refund</option>
+                      <option value="partial">Partial Refund</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-base lg:text-lg text-black font-medium">Refund Amount</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <input
+                        type="number"
+                        value={refundAmount}
+                        onChange={(e) => {
+                          let val = Number(e.target.value);
+                          if (val > total_amount) val = total_amount;
+                          if (val < 0) val = 0;
+                          setRefundAmount(val);
+                        }}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md"
+                        readOnly={refundType === "full"} // editable only for partial
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-base lg:text-lg text-black font-medium">Refund Reason</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <option value="">Select a reason</option>
+                    <option value="cancelled">Event cancelled</option>
+                    <option value="customer">Customer request</option>
+                    <option value="duplicate">Duplicate charge</option>
+                    <option value="fraud">Fraudulent transaction</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-base lg:text-lg text-black font-medium">Administrative Notes</label>
+                  <textarea
+                    rows="3"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="Internal notes about this refund..."
+                  ></textarea>
+                </div>
+
+                <div className="mb-6 p-4 bg-yellow-50 rounded-md text-black border">
+                  <h4 className="font-bold text-xl text-black mb-2">Refund Summary</h4>
+                  <div className="space-y-2 text-base">
+                    <div className="flex justify-between">
+                      <span>Original Amount:</span>
+                      <span>${total_amount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Refund Amount:</span>
+                      <span className="font-medium">${refundAmount}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2 mt-2">
+                      <span>Remaining Balance:</span>
+                      <span className="font-medium text-black">${(total_amount - refundAmount).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    />
+                    <label className="ml-2 text-black">Send notification to customer</label>
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowRefundPopup(false)}
+                      className="px-4 py-2 rounded bg-black text-white font-semibold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold"
+                    >
+                      Process Refund
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
