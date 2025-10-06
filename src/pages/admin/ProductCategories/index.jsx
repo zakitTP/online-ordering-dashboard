@@ -134,56 +134,58 @@ export default function CategoriesPage() {
                 <tr>
                   <th className="text-left font-medium px-3 py-2">ID</th>
                   <th className="text-left font-medium px-3 py-2">Category</th>
-                  <th className="text-center font-medium px-3 py-2">Mounting</th>
-                  <th className="text-center font-medium px-3 py-2">Accessories</th>
+                  <th className="text-center font-medium px-3 py-2">Type</th>
                   <th className="text-center font-medium px-3 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody className="main-card-box-row">
-                {categories.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-3 py-6 text-center text-gray-500">
-                      No categories found
-                    </td>
-                  </tr>
-                ) : (
-                  categories.map((cat) => (
-                    <tr key={cat.id} className="border-t hover:bg-gray-50">
-                      <td className="px-3 py-2">{cat.id}</td>
-                      <td className="px-3 py-2 font-medium">{cat.name}</td>
-                      <td className="px-3 py-2 text-center">
-                        {cat.includeMounting ? "✅" : "❌"}
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        {cat.includeAccessories ? "✅" : "❌"}
-                      </td>
-                      <td className="px-3 py-2 text-center flex justify-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedCategory(cat);
-                            setNewCategory(cat.name);
-                            setIncludeMounting(cat.includeMounting);
-                            setIncludeAccessories(cat.includeAccessories);
-                            setShowEditModal(true);
-                          }}
-                          className="px-2 py-1 rounded bg-blue-600 text-white text-xs"
-                        >
-                          <FiEdit size={14} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedCategory(cat);
-                            setShowDeleteModal(true);
-                          }}
-                          className="px-2 py-1 rounded bg-red-600 text-white text-xs"
-                        >
-                          <FiTrash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
+    {categories.length === 0 ? (
+      <tr>
+        <td colSpan="4" className="px-3 py-6 text-center text-gray-500">
+          No categories found
+        </td>
+      </tr>
+    ) : (
+      categories.map((cat) => (
+        <tr key={cat.id} className="border-t hover:bg-gray-50">
+          <td className="px-3 py-2">{cat.id}</td>
+          <td className="px-3 py-2 font-medium">{cat.name}</td>
+          <td className="px-3 py-2 text-center">
+            {cat.includeMounting && cat.includeAccessories
+              ? "Mounting + Accessories"
+              : cat.includeMounting
+              ? "Mounting"
+              : cat.includeAccessories
+              ? "Accessories"
+              : ""}
+          </td>
+          <td className="px-3 py-2 text-center flex justify-center gap-2">
+            <button
+              onClick={() => {
+                setSelectedCategory(cat);
+                setNewCategory(cat.name);
+                setIncludeMounting(cat.includeMounting);
+                setIncludeAccessories(cat.includeAccessories);
+                setShowEditModal(true);
+              }}
+              className="px-2 py-1 rounded bg-black text-white text-sm"
+            >
+              <FiEdit size={14} />
+            </button>
+            <button
+              onClick={() => {
+                setSelectedCategory(cat);
+                setShowDeleteModal(true);
+              }}
+              className="px-2 py-1 rounded bg-red-600 text-white text-xs"
+            >
+              <FiTrash2 size={14} />
+            </button>
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
             </table>
           )}
         </div>
