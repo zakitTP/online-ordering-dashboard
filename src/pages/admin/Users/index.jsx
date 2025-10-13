@@ -71,15 +71,7 @@ export default function UserList() {
     }
   };
 
-  if(loading){
-    return(
-       <div className="flex items-center justify-center min-h-screen">
 
-       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
-
-      </div>
-    )
-  }
 
   return (
     <div id="users" className="view !mt-0">
@@ -107,18 +99,17 @@ export default function UserList() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <select
-            className="w-full px-3 py-2 rounded border border-slate-300 text-lg"
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-          >
-            {["All Roles", "Admin", "Manager", "Staff"].map((role) => (
-              <option key={role}>{role}</option>
-            ))}
-          </select>
         </div>
 
-        {/* Users Table */}
+        {loading  ?  
+           <div className="flex items-center justify-center min-h-screen">
+
+       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
+
+      </div>
+        
+        :
+
         <div className="overflow-x-auto">
     
             <table className="min-w-full text-sm db-back-table responsive">
@@ -163,6 +154,7 @@ export default function UserList() {
               </tbody>
             </table>
         </div>
+}   
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4 text-base">

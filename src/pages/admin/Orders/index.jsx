@@ -1,24 +1,32 @@
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiEye, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiEye, FiTrash2, FiSearch,FiChevronLeft,FiChevronRight } from "react-icons/fi";
 import apiClient from "../../../apiClient";
 import { Link } from "react-router-dom";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All");
 
-  // State for delete modal
+  // Delete modal
   const [deleteId, setDeleteId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Fetch all orders
+  // Fetch orders with filters and pagination
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get("/api/orders");
-      setOrders(res.data);
+      const res = await apiClient.get("/api/orders", {
+        params: { page, search, status },
+      });
+     setOrders(res.data.data || []);
+      setTotalPages(res.data.last_page);
+
     } catch (err) {
       toast.error("Failed to fetch orders");
     } finally {
@@ -42,9 +50,10 @@ export default function Orders() {
     }
   };
 
+  // Fetch whenever filters or page change
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [page, search, status]);
 
   return (
     <div id="orders" className="view !mt-0">
@@ -59,16 +68,28 @@ export default function Orders() {
           <div className="flex items-center gap-2 px-3 py-2 rounded border border-slate-300">
             <FiSearch className="text-slate-500" />
             <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1); // reset to page 1 when searching
+              }}
               placeholder="Search order ID, customer…"
               className="w-full outline-none text-lg"
             />
           </div>
-          <select className="w-full px-3 py-2 rounded text-lg border border-slate-300">
-            <option>Status: All</option>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            className="w-full px-3 py-2 rounded text-lg border border-slate-300"
+          >
+            <option>All</option>
             <option>Pending</option>
-            <option>Paid</option>
-            <option>Shipped</option>
-            <option>Cancelled</option>
+            <option>Completed</option>
+            <option>Refunded</option>
+            <option>Failed</option>
           </select>
         </div>
 
@@ -81,87 +102,134 @@ export default function Orders() {
           ) : orders.length === 0 ? (
             <p className="text-center py-6">No orders found</p>
           ) : (
-            <table className="min-w-full text-sm db-back-table responsive">
-              <thead>
-                <tr>
-                  <th className="text-left font-medium px-3 py-2">Order ID</th>
-                  <th className="text-left font-medium px-3 py-2">Form ID</th>
-                  <th className="text-left font-medium px-3 py-2">Total</th>
-                  <th className="text-left font-medium px-3 py-2">Status</th>
-                  <th className="text-left font-medium px-3 py-2">Date</th>
-                  <th className="text-center font-medium px-3 py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="main-card-box-row new">
-                {orders.map((order) => (
-                  <tr key={order.id} className="border-t">
-                    <td className="px-3 py-2 font-medium" data-label="Order ID">
-                      #{order.id}
-                     
-                    </td>
-                    <td className="px-3 py-2" data-label="Form ID">
-                      {order.form_id}
-                    </td>
-                    <td className="px-3 py-2 text-left" data-label="Total">
-                      ₹{order.total_amount}
-                    </td>
-                    <td className="px-3 py-2" data-label="Status">
-                      <span className="inline-flex px-3 py-0.5 rounded-full border border-[#bbb] bg-[#dcdcdc] order-status-badge capitalize text-sm">
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2" data-label="Date">
-                      {new Date(order.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-3 py-2 text-center" data-label="Actions">
-                      <div className="mobile-action-btns flex justify-center gap-2">
-                        <Link
-                          to={`/dashboard/orders/${order.id}`}
-                          className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
-                          title="View"
-                        >
-                          <FiEye />
-                        </Link>
-                        <button
-                          onClick={() => setDeleteId(order.id)}
-                          className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
-                          title="Delete"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      </div>
-                    </td>
+            <>
+              <table className="min-w-full text-sm db-back-table responsive">
+                <thead>
+                  <tr>
+                    <th className="text-left font-medium px-3 py-2">Order ID</th>
+                    <th className="text-left font-medium px-3 py-2">Form Title</th>
+                    <th className="text-left font-medium px-3 py-2">Company Name</th>
+                    <th className="text-left font-medium px-3 py-2">Total</th>
+                    <th className="text-left font-medium px-3 py-2">Status</th>
+                    <th className="text-left font-medium px-3 py-2">Date</th>
+                    <th className="text-center font-medium px-3 py-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id} className="border-t">
+                      <td className="px-3 py-2 font-medium">#{order.id}</td>
+                      <td className="px-3 py-2">{order?.form?.form_title} (ID:#{order?.form?.id})</td>
+                      <td className="px-3 py-2">{order?.form?.company_name}</td>
+                      <td className="px-3 py-2 text-left">₹{order.total_amount}</td>
+                      <td className="px-3 py-2">
+                       <td className="px-3 py-2">
+  {(() => {
+    let colorClasses = "border-gray-400 bg-gray-200 text-gray-800"; // default
+
+    switch (order.status?.toLowerCase()) {
+      case "completed":
+        colorClasses = "border-green-600 bg-green-100 text-green-700";
+        break;
+      case "failed":
+        colorClasses = "border-red-600 bg-red-100 text-red-700";
+        break;
+      case "refunded":
+        colorClasses = "border-orange-500 bg-orange-100 text-orange-700";
+        break;
+      case "pending":
+        colorClasses = "border-yellow-500 bg-yellow-100 text-yellow-700";
+        break;
+    }
+
+    return (
+      <span
+        className={`inline-flex px-3 py-0.5 rounded-full border capitalize text-sm font-medium ${colorClasses}`}
+      >
+        {order.status}
+      </span>
+    );
+  })()}
+</td>
+
+                      </td>
+                      <td className="px-3 py-2">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="flex justify-center gap-2">
+                          <Link
+                            to={`/dashboard/orders/${order.id}`}
+                            className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
+                          >
+                            <FiEye />
+                          </Link>
+                          <button
+                            onClick={() => setDeleteId(order.id)}
+                            className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Pagination */}
+              {/* Improved Pagination */}
+<div className="flex items-center justify-center gap-3 mt-6">
+  <p className="text-slate-600">
+    {Math.min((page - 1) * orders.length + 1, orders.length)}–
+    {Math.min(page * orders.length, totalPages * orders.length)} of{" "}
+    {totalPages * orders.length}
+  </p>
+  <div className="flex items-center gap-1">
+    <button
+      onClick={() => setPage((p) => Math.max(1, p - 1))}
+      disabled={page === 1}
+      className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+    >
+      <FiChevronLeft />
+    </button>
+    <span className="px-3 py-1 rounded-lg border bg-brand-600 text-white border-brand-600">
+      {page}
+    </span>
+    <button
+      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+      disabled={page === totalPages}
+      className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+    >
+      <FiChevronRight />
+    </button>
+  </div>
+</div>
+
+            </>
           )}
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md mx-4 rounded-lg border border-slate-200 bg-white shadow-xl p-6">
-            <div className="flex items-start gap-3">
-              <div className="flex-1">
-                <h3 className="text-2xl text-black font-bold">Delete order?</h3>
-                <p className="text-base text-black my-3">
-                  Are you sure you want to delete this order?
-                </p>
-              </div>
-            </div>
-            <div className="mt-1 flex items-center justify-end gap-2">
+            <h3 className="text-2xl text-black font-bold">Delete order?</h3>
+            <p className="text-base text-black my-3">
+              Are you sure you want to delete this order?
+            </p>
+            <div className="mt-1 flex justify-end gap-2">
               <button
                 onClick={() => setDeleteId(null)}
-                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
+                className="px-4 py-2 rounded bg-gray-400 text-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleteLoading}
-                className={`px-3 md:px-5 py-3 rounded bg-black text-white text-xl w-32 text-center ${
+                className={`px-4 py-2 rounded bg-black text-white ${
                   deleteLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import apiClient from "../../apiClient";
+import dayjs from "dayjs";
 
 const ProductSelection = ({
   formData,
@@ -11,7 +12,6 @@ const ProductSelection = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-
   useEffect(() => {
     let cancelled = false;
     const run = async () => {
@@ -34,7 +34,26 @@ const ProductSelection = ({
       cancelled = true;
     };
   }, [searchTerm]);
+function calculateRentalDays(startDate, startTime, endDate, endTime) {
+  if (startDate && endDate) {
+    const startDateTime = dayjs(`${startDate} ${startTime}`);
+    const endDateTime = dayjs(`${endDate} ${endTime}`);
 
+    // Total hours difference
+    const hoursDiff = endDateTime.diff(startDateTime, "hour");
+
+    // Convert to days (always round up)
+    let rentalDays = Math.ceil(hoursDiff / 24);
+
+    // Ensure minimum 1 day
+    if (rentalDays < 1) {
+      rentalDays = 1;
+    }
+
+    return rentalDays;
+  }
+  return 1; // default if no dates
+}
 
   const handleAddProduct = (product) => {
     if (selectedProducts.some((p) => p.id === product.id)) return;
@@ -60,7 +79,7 @@ const ProductSelection = ({
       <div className="flex items-center gap-2 mb-4 relative">
         <i className="fa-solid fa-magnifying-glass text-slate-500"></i>
         <input
-          placeholder="Search products…"
+          placeholder="Please start by search product e.g. monitor, mount, cable"
           className="w-full rounded border border-slate-300 px-3 py-3"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -167,7 +186,7 @@ const ProductSelection = ({
                   </div>
                   <input
                     type="number"
-                    value={formData?.rentalDays}
+                    value={calculateRentalDays(formData?.startDate,formData?.startTime,formData?.finishDate,formData?.finishTime)}
                     min="1"
                     readOnly
                     className="mt-1 w-14 rounded border border-slate-300 px-2 py-1 text-center text-base bg-white"

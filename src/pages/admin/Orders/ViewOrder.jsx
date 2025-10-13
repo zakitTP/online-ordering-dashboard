@@ -3,23 +3,34 @@ import { useParams, Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import apiClient from "../../../apiClient";
 import "react-toastify/dist/ReactToastify.css";
-import { FaPhone, FaEnvelope, FaUndoAlt, FaTimes } from "react-icons/fa";
+import {
+  FaPhone,
+  FaEnvelope,
+  FaUndoAlt,
+  FaTimes,
+  FaSpinner,
+  FaReceipt,
+  FaCalendarAlt,
+  FaIdCard,
+} from "react-icons/fa";
 
 export default function ViewOrder() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refundLoading, setRefundLoading] = useState(false);
   const [showRefundPopup, setShowRefundPopup] = useState(false);
   const [refundType, setRefundType] = useState("full");
   const [refundAmount, setRefundAmount] = useState(0);
-
+  const [refundNote, setRefundNote] = useState("");
+  console.log(order);
   // Fetch order
   const fetchOrder = async () => {
     try {
       setLoading(true);
       const res = await apiClient.get(`/api/orders/${id}`);
       setOrder(res.data);
-      setRefundAmount(res.data?.total_amount || 0); // default refund amount
+      setRefundAmount(res.data?.total_amount || 0);
     } catch (err) {
       console.error(err);
       toast.error("Failed to fetch order");
@@ -32,6 +43,84 @@ export default function ViewOrder() {
     fetchOrder();
   }, [id]);
 
+  // Handle refund type change
+  const handleRefundTypeChange = (e) => {
+    const type = e.target.value;
+    setRefundType(type);
+    if (type === "full") setRefundAmount(order?.total_amount || 0);
+    if (type === "partial") setRefundAmount(0);
+  };
+
+  // Handle refund submission
+  const handleRefundSubmit = async (e) => {
+    e.preventDefault();
+
+    if (refundAmount <= 0) {
+      toast.error("Refund amount must be greater than zero");
+      return;
+    }
+
+    if (order?.total_amount > order?.total_amount) {
+      toast.error("Refund amount cannot exceed order total");
+      return;
+    }
+
+    setRefundLoading(true);
+
+    try {
+      const response = await apiClient.post("/api/orders/refund", {
+        order_id: order.id,
+        refund_amount: parseFloat(refundAmount),
+        refund_note: refundNote,
+      });
+
+      if (response.status === 200) {
+        toast.success(
+          response.data.message || "Refund processed successfully!"
+        );
+
+        // Update local order state with refund details
+        setOrder((prevOrder) => ({
+          ...prevOrder,
+          status: "refunded",
+          refund_detail: response.data.refund,
+        }));
+
+        setShowRefundPopup(false);
+        setRefundNote("");
+
+        // Refresh order data to get latest status
+        setTimeout(() => {
+          fetchOrder();
+        }, 1000);
+      } else {
+        throw new Error(response.data.error || "Refund failed");
+      }
+    } catch (error) {
+      console.error("Refund error:", error);
+
+      let errorMessage = "Refund processing failed";
+
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+
+      // If we have refund details in error response, update the order
+      if (error.response?.data?.refund) {
+        setOrder((prevOrder) => ({
+          ...prevOrder,
+          refund_detail: error.response.data.refund,
+        }));
+      }
+    } finally {
+      setRefundLoading(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -40,7 +129,7 @@ export default function ViewOrder() {
     );
 
   if (!order) return <p className="text-center py-6">Order not found</p>;
-console.log(order);
+
   // Destructure order safely
   const order_detail = order?.order_detail || {};
   const formData = order_detail?.formData || {};
@@ -50,6 +139,7 @@ console.log(order);
   const companyInfo = clientData?.companyInfo || {};
   const status = order?.status || "N/A";
   const total_amount = order?.total_amount || 0;
+  const refund_detail = order?.refund_detail || {};
 
   const equipmentTotal = order_detail?.equipmentTotal || 0;
   const labourCharge = order_detail?.labourCharge || 0;
@@ -58,38 +148,37 @@ console.log(order);
   const taxes = order_detail?.taxes || 0;
   const deliveryPickup = order_detail?.deliveryPickup || 0;
   const quantities = clientData?.equipmentSelection?.quantities || {};
+  const combinedLabour = order_detail?.combinedLabour || 0;
+  const subtotal = order_detail?.subtotal || 0;
+  const consumablesTotal = order_detail?.consumablesTotal || 0;
+  const tax_breakdown = order_detail?.tax_breakdown || '';
 
-  // Handle refund type change
-  const handleRefundTypeChange = (e) => {
-    const type = e.target.value;
-    setRefundType(type);
-    if (type === "full") setRefundAmount(total_amount);
-    if (type === "partial") setRefundAmount(0);
-  };
+  // Check if order is already refunded
+  const isRefunded = status === "refunded";
 
-  // Handle refund submission
-  const handleRefundSubmit = (e) => {
-    e.preventDefault();
-    if (refundAmount <= 0) {
-      toast.error("Refund amount must be greater than zero");
-      return;
-    }
-    // TODO: Call API to process refund
-    toast.success(`Refund of $${refundAmount} processed successfully!`);
-    setShowRefundPopup(false);
-  };
+  // Get refund transaction ID from refund response
+  const refundTransactionId =
+    refund_detail?.refund_response?.gatewayResponse
+      ?.transactionProcessingDetails?.transactionId;
+
+  // Get refund date
+  const refundDate = refund_detail?.refunded_at;
+
+  // Get refund amount
+  const refundAmountValue = refund_detail?.refund_amount;
 
   return (
     <div className="md:p-4 p-0 space-y-6">
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={5000} />
 
       <div className="pb-4">
-      <Link
-        to="/dashboard/orders"
-        className="px-4 py-2  inline-block rounded bg-black text-white font-semibold"
-      >
-        ← Back to Orders
-      </Link></div>
+        <Link
+          to="/dashboard/orders"
+          className="px-4 py-2 inline-block rounded bg-black text-white font-semibold"
+        >
+          ← Back to Orders
+        </Link>
+      </div>
 
       <div className="view !mt-0">
         {/* Order Header */}
@@ -99,14 +188,24 @@ console.log(order);
             <p className="text-black mt-1">Order #{order.id}</p>
             <p className="text-black mt-1">{event_info.showName}</p>
           </div>
+          {status == 'completed' &&
           <div className="mt-4 md:mt-0 flex space-x-3">
-            <button
-              onClick={() => setShowRefundPopup(true)}
-              className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center"
-            >
-              <FaUndoAlt className="mr-2" /> Process Refund
-            </button>
+            {!isRefunded && (
+              <button
+                onClick={() => setShowRefundPopup(true)}
+                disabled={refundLoading}
+                className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {refundLoading ? (
+                  <FaSpinner className="mr-2 animate-spin" />
+                ) : (
+                  <FaUndoAlt className="mr-2" />
+                )}
+                {refundLoading ? "Processing..." : "Process Refund"}
+              </button>
+            )}
           </div>
+}
         </div>
 
         {/* Order Summary, Customer Info, Event Info */}
@@ -129,16 +228,57 @@ console.log(order);
               </div>
               <div className="flex justify-between">
                 <span>Status:</span>
-                <span className={`status-badge status-${status}`}>{status}</span>
+                <span className={`capitalize font-medium status-badge status-${status}`}>
+                  {status}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Payment Method:</span>
-                <span className="font-medium">{order.payment_method || "N/A"}</span>
+                <span className="font-medium">
+                  {order.payment_method || "N/A"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Amount:</span>
                 <span className="font-medium">${total_amount}</span>
               </div>
+
+              {/* Refund Information */}
+              {isRefunded && (
+                <>
+                  <div className="border-t pt-3 mt-3">
+                    <div className="flex justify-between text-grey-600">
+                      <span>Refund Amount:</span>
+                      <span className="font-medium">${refundAmountValue}</span>
+                    </div>
+                    <div className="flex justify-between mt-2">
+                      <span className="flex items-center  text-gray-600">
+                        Refund Date:
+                      </span>
+                      <span className="font-medium">
+                        {new Date(refundDate).toLocaleDateString()} at{" "}
+                        {new Date(refundDate).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    {refundTransactionId && (
+                      <div className="flex justify-between mt-2">
+                        <span className="flex items-center text-gray-600">
+                          Transaction ID:
+                        </span>
+                       <span className="font-medium max-w-[180px] break-all block" title={refundTransactionId}>
+  {refundTransactionId}
+</span>
+                      </div>
+                    )}
+                    {refund_detail?.refund_note && (
+                      <div className="mt-2 p-2 bg-gray-100 rounded text-sm">
+                        <span className="font-medium">Note:</span>{" "}
+                        {refund_detail.refund_note}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -150,7 +290,9 @@ console.log(order);
             <div className="space-y-3">
               <div>
                 <p className="text-lg font-medium">{companyInfo.companyName}</p>
-                <p className="text-black">Ordered by {companyInfo.contactName}</p>
+                <p className="text-black">
+                  Ordered by {companyInfo.contactName}
+                </p>
               </div>
               <div>
                 <p className="text-black">{companyInfo.address1}</p>
@@ -161,10 +303,12 @@ console.log(order);
               </div>
               <div className="pt-2">
                 <p className="text-black font-medium flex items-center">
-                  <FaPhone className="text-[#C81A1F] mr-2" /> {companyInfo.contactPhone}
+                  <FaPhone className="text-[#C81A1F] mr-2" />{" "}
+                  {companyInfo.contactPhone}
                 </p>
                 <p className="text-black font-medium flex items-center">
-                  <FaEnvelope className="text-[#C81A1F] mr-2" /> {companyInfo.email}
+                  <FaEnvelope className="text-[#C81A1F] mr-2" />{" "}
+                  {companyInfo.email}
                 </p>
               </div>
             </div>
@@ -187,10 +331,13 @@ console.log(order);
               </div>
               <div className="pt-2">
                 <p className="text-black">
-                  <span className="font-medium">Load In:</span> {event_info.loadInDate} at {event_info.loadInTime}
+                  <span className="font-medium">Load In:</span>{" "}
+                  {event_info.loadInDate} at {event_info.loadInTime}
                 </p>
                 <p className="text-black">
-                  <span className="font-medium">Event:</span> {event_info.startDate} at {event_info.startTime} - {event_info.finishDate} at {event_info.finishTime}
+                  <span className="font-medium">Event:</span>{" "}
+                  {event_info.startDate} at {event_info.startTime} -{" "}
+                  {event_info.finishDate} at {event_info.finishTime}
                 </p>
               </div>
             </div>
@@ -204,31 +351,48 @@ console.log(order);
             <table className="min-w-full db-back-table responsive">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Item</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Qty</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Price</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Total</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Item
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Qty
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Price
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Total
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white main-card-box-row">
                 {products.map((p) => (
                   <tr key={p.id}>
-                   <td className="px-4 py-3 font-semibold" data-label="Item">
-  <p>
-    {p.title}
-    {p.labour_price > 0 && (
-      <span className="text-[12px] md:text-[14px] text-slate-500">
-        (*Extra labour req'd per day) ({p.labour_price})
-      </span>
-    )}
-  </p>
-</td>
-
-                    <td className="px-4 py-3" data-label="Category">{p.category_name}</td>
-                    <td className="px-4 py-3" data-label="Qty">{quantities[p.id] || 1}</td>
-                    <td className="px-4 py-3" data-label="Price">${p.prepaid_price}</td>
-                    <td className="px-4 py-3" data-label="Total">${(p.prepaid_price * (quantities[p.id] || 1)).toFixed(2)}</td>
+                    <td className="px-4 py-3 font-semibold" data-label="Item">
+                      <p>
+                        {p.title}
+                        {p.labour_price > 0 && (
+                          <span className="text-[12px] md:text-[14px] text-slate-500">
+                            (*Extra labour req'd per day) ({p.labour_price})
+                          </span>
+                        )}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3" data-label="Category">
+                      {p.category_name}
+                    </td>
+                    <td className="px-4 py-3" data-label="Qty">
+                      {quantities[p.id] || 1}
+                    </td>
+                    <td className="px-4 py-3" data-label="Price">
+                      ${p.prepaid_price}
+                    </td>
+                    <td className="px-4 py-3" data-label="Total">
+                      ${(p.prepaid_price * (quantities[p.id] || 1)).toFixed(2)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -237,13 +401,52 @@ console.log(order);
 
           {/* Totals */}
           <div className="mt-4 pt-4 border-t space-y-2">
-            <div className="flex justify-between"><span className="text-black font-medium">Equipment Total</span><span>${equipmentTotal}</span></div>
-            <div className="flex justify-between"><span className="text-black font-medium">Labour Charge</span><span>${labourCharge}</span></div>
-            <div className="flex justify-between"><span className="text-black font-medium">Admin Fees</span><span>${adminFees}</span></div>
-            <div className="flex justify-between"><span className="text-black font-medium">Insurance</span><span>${insurance}</span></div>
-            <div className="flex justify-between"><span className="text-black font-medium">Taxes</span><span>${taxes}</span></div>
-            <div className="flex justify-between"><span className="text-black font-medium">Delivery/Pickup</span><span>${deliveryPickup}</span></div>
-            <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t"><span>Total Payment</span><span>${total_amount}</span></div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">Equipment Total</span>
+              <span>${equipmentTotal}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">Labour Charge</span>
+              <span>${labourCharge}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">
+                Additional Large Monitor / Kiosk / Wall Mount + Screen Labour
+              </span>
+              <span>${combinedLabour}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">Insurance</span>
+              <span>${insurance}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">Consumables</span>
+              <span>${consumablesTotal}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">Admin Fees</span>
+              <span>${adminFees}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-black font-medium">Delivery/Pickup</span>
+              <span>${deliveryPickup}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">Subtotal</span>
+              <span>${subtotal}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-black font-medium">
+                Taxes {Object.keys(tax_breakdown).join(", ")}
+              </span>
+              <span>${taxes}</span>
+            </div>
+
+            <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t">
+              <span>Total Payment</span>
+              <span>${total_amount}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -254,10 +457,13 @@ console.log(order);
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-2xl font-bold text-black">Process Refund</h3>
+                <h3 className="text-2xl font-bold text-black">
+                  Process Refund
+                </h3>
                 <button
-                  onClick={() => setShowRefundPopup(false)}
-                  className="text-brand-600 text-xl hover:text-gray-700"
+                  onClick={() => !refundLoading && setShowRefundPopup(false)}
+                  disabled={refundLoading}
+                  className="text-brand-600 text-xl hover:text-gray-700 disabled:opacity-50"
                 >
                   <FaTimes />
                 </button>
@@ -266,11 +472,14 @@ console.log(order);
               <form onSubmit={handleRefundSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-base lg:text-lg text-black font-medium">Refund Type</label>
+                    <label className="block text-base lg:text-lg text-black font-medium">
+                      Refund Type
+                    </label>
                     <select
                       value={refundType}
                       onChange={handleRefundTypeChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      disabled={refundLoading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
                     >
                       <option value="full">Full Refund</option>
                       <option value="partial">Partial Refund</option>
@@ -278,48 +487,63 @@ console.log(order);
                   </div>
 
                   <div>
-                    <label className="block text-base lg:text-lg text-black font-medium">Refund Amount</label>
+                    <label className="block text-base lg:text-lg text-black font-medium">
+                      Refund Amount
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-2 text-gray-500">
+                        $
+                      </span>
                       <input
                         type="number"
+                        max={total_amount}
                         value={refundAmount}
                         onChange={(e) => {
-                          let val = Number(e.target.value);
-                          if (val > total_amount) val = total_amount;
-                          if (val < 0) val = 0;
+                          let val = e.target.value;
+
+                          // Allow clearing the field
+                          if (val === "") {
+                            setRefundAmount("");
+                            return;
+                          }
+
+                          // Remove leading zeros except for "0." (like 0.5)
+                          if (/^0+[0-9]/.test(val)) {
+                            val = val.replace(/^0+/, "");
+                          }
+
+                          // Convert to float for validation
+                          let numVal = parseFloat(val);
+                          if (isNaN(numVal) || numVal < 0) numVal = 0;
+                          if (numVal > total_amount) numVal = total_amount;
+
                           setRefundAmount(val);
                         }}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md"
-                        readOnly={refundType === "full"} // editable only for partial
+                        disabled={refundLoading || refundType === "full"}
+                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="mb-4">
-                  <label className="block text-base lg:text-lg text-black font-medium">Refund Reason</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md" required>
-                    <option value="">Select a reason</option>
-                    <option value="cancelled">Event cancelled</option>
-                    <option value="customer">Customer request</option>
-                    <option value="duplicate">Duplicate charge</option>
-                    <option value="fraud">Fraudulent transaction</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-
                 <div className="mb-6">
-                  <label className="block text-base lg:text-lg text-black font-medium">Administrative Notes</label>
+                  <label className="block text-base lg:text-lg text-black font-medium">
+                    Refund Note (Optional)
+                  </label>
                   <textarea
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={refundNote}
+                    onChange={(e) => setRefundNote(e.target.value)}
+                    disabled={refundLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
                     placeholder="Internal notes about this refund..."
                   ></textarea>
                 </div>
 
                 <div className="mb-6 p-4 bg-yellow-50 rounded-md text-black border">
-                  <h4 className="font-bold text-xl text-black mb-2">Refund Summary</h4>
+                  <h4 className="font-bold text-xl text-black mb-2">
+                    Refund Summary
+                  </h4>
                   <div className="space-y-2 text-base">
                     <div className="flex justify-between">
                       <span>Original Amount:</span>
@@ -331,7 +555,9 @@ console.log(order);
                     </div>
                     <div className="flex justify-between border-t pt-2 mt-2">
                       <span>Remaining Balance:</span>
-                      <span className="font-medium text-black">${(total_amount - refundAmount).toFixed(2)}</span>
+                      <span className="font-medium text-black">
+                        ${(total_amount - refundAmount).toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -341,24 +567,36 @@ console.log(order);
                     <input
                       type="checkbox"
                       defaultChecked
-                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                      disabled={refundLoading}
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded disabled:opacity-50"
                     />
-                    <label className="ml-2 text-black">Send notification to customer</label>
+                    <label className="ml-2 text-black">
+                      Send notification to customer
+                    </label>
                   </div>
 
                   <div className="flex space-x-3">
                     <button
                       type="button"
                       onClick={() => setShowRefundPopup(false)}
-                      className="px-4 py-2 rounded bg-black text-white font-semibold"
+                      disabled={refundLoading}
+                      className="px-4 py-2 rounded bg-black text-white font-semibold disabled:opacity-50"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold"
+                      disabled={refundLoading}
+                      className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Process Refund
+                      {refundLoading ? (
+                        <>
+                          <FaSpinner className="mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Process Refund"
+                      )}
                     </button>
                   </div>
                 </div>

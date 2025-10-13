@@ -51,6 +51,7 @@ const AddForm = () => {
   });
 
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [taxSelected, setTaxSelected] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -66,6 +67,31 @@ const AddForm = () => {
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const formatFieldName = (fieldName) => {
+    const fieldNameMap = {
+      formTitle: "Form Title",
+      contactName: "Contact Name",
+      contactEmail: "Contact Email",
+      contactPhone: "Contact Phone",
+      companyName: "Company Name",
+      companyLogo: "Company Logo",
+      showName: "Show Name",
+      facility: "Facility",
+      room: "Room",
+      loadInDate: "Load In Date",
+      loadInTime: "Load In Time",
+      startDate: "Start Date",
+      startTime: "Start Time",
+      finishDate: "Finish Date",
+      finishTime: "Finish Time",
+    };
+
+    return (
+      fieldNameMap[fieldName] ||
+      fieldName.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
+    );
   };
 
   const validateForm = (status) => {
@@ -97,13 +123,18 @@ const AddForm = () => {
 
     for (let field of requiredFields) {
       if (!formData[field]) {
-        toast.error(`Please fill ${field}`);
+        toast.error(`Please fill ${formatFieldName(field)}`);
         return false;
       }
     }
 
     if (formData.products.length === 0) {
       toast.error("Please select at least one product");
+      return false;
+    }
+
+    if (!taxSelected) {
+      toast.error("Please select a tax option");
       return false;
     }
 
@@ -162,7 +193,7 @@ const AddForm = () => {
         `Form ${status === "draft" ? "saved as draft" : "published"} successfully!`
       );
 
-      const formUrl = `${window.location.origin}/orderform/${savedForm.id}`;
+      const formUrl = `https://av-canada.com/order/client/orderform/${savedForm.id}`;
       setModalContent({
         accessCode: savedForm.access_code || "",
         formUrl,
@@ -217,9 +248,7 @@ const AddForm = () => {
       >
         <button
           data-step="1"
-          className={`${stepBtnBase} ${
-            activeStep === 1 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 1 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(1)}
           type="button"
         >
@@ -228,9 +257,7 @@ const AddForm = () => {
 
         <button
           data-step="2"
-          className={`${stepBtnBase} ${
-            activeStep === 2 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 2 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(2)}
           type="button"
         >
@@ -239,9 +266,7 @@ const AddForm = () => {
 
         <button
           data-step="3"
-          className={`${stepBtnBase} ${
-            activeStep === 3 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 3 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(3)}
           type="button"
         >
@@ -250,9 +275,7 @@ const AddForm = () => {
 
         <button
           data-step="4"
-          className={`${stepBtnBase} ${
-            activeStep === 4 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 4 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(4)}
           type="button"
         >
@@ -293,7 +316,11 @@ const AddForm = () => {
           data-step="2"
           className={`${activeStep === 2 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
         >
-          <EventInfo formData={formData} onInputChange={handleInputChange} setFormData={setFormData} />
+          <EventInfo
+            formData={formData}
+            onInputChange={handleInputChange}
+            setFormData={setFormData}
+          />
 
           <div className="flex items-center justify-end gap-3 mt-8 text-xl">
             <button
@@ -352,7 +379,11 @@ const AddForm = () => {
           data-step="4"
           className={`${activeStep === 4 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
         >
-          <Taxes formData={formData} setFormData={setFormData} />
+          <Taxes
+            formData={formData}
+            setFormData={setFormData}
+            setTaxSelected={setTaxSelected}
+          />
 
           <div className="flex items-center justify-end gap-3 mt-8 text-xl">
             <button

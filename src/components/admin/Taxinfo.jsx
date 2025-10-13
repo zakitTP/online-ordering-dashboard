@@ -1,17 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  FaBan,
-  FaPercent,
-  FaReceipt,
-  FaFileInvoiceDollar,
-  FaCalendarDays,
-  FaSliders,
-  FaCircleCheck 
-} from "react-icons/fa6";
+import { FaBan, FaPercent, FaReceipt, FaSliders, FaCircleCheck } from "react-icons/fa6";
 
 const presetOptions = [
   { key: "none", label: "No Tax", icon: FaBan, rate: 0 },
-
   { key: "ab_gst", label: "AB GST (5%)", icon: FaPercent, rate: 5 },
   { key: "bc_gst", label: "BC GST (5%)", icon: FaPercent, rate: 5 },
   { key: "gst_only", label: "GST ONLY (5%)", icon: FaPercent, rate: 5 },
@@ -26,57 +17,57 @@ const presetOptions = [
   { key: "qc_gst", label: "QC GST (5%)", icon: FaPercent, rate: 5 },
   { key: "sk_gst", label: "SK GST (5%)", icon: FaPercent, rate: 5 },
   { key: "yt_gst", label: "YT GST (5%)", icon: FaPercent, rate: 5 },
-
-  // Optional: add a custom option
   { key: "custom", label: "Custom Tax", icon: FaSliders, rate: null, custom: true },
 ];
 
-const Taxes = ({ formData, setFormData }) => {
-  // Parse tax safely
-  let taxObj = {};
-  if (formData.otherSettings?.tax) {
-    if (typeof formData.otherSettings.tax === "string") {
-      try {
-        taxObj = JSON.parse(formData.otherSettings.tax);
-      } catch (err) {
-        taxObj = {};
-        console.error("Failed to parse tax:", err);
-      }
-    } else if (typeof formData.otherSettings.tax === "object" && !Array.isArray(formData.otherSettings.tax)) {
-      taxObj = formData.otherSettings.tax;
-    }
-  }
-
-  const currentTaxName = Object.keys(taxObj)[0] || "none";
-  const currentTaxRate = currentTaxName in taxObj ? taxObj[currentTaxName] : 0;
-
-  const [selectedKey, setSelectedKey] = useState(
-    presetOptions.find((o) => o.label === currentTaxName)?.key ||
-    (presetOptions.some((o) => o.custom && currentTaxName !== "none") ? "custom" : "none")
-  );
-  const [customName, setCustomName] = useState(
-    !presetOptions.some((o) => o.label === currentTaxName) && currentTaxName !== "none"
-      ? currentTaxName
-      : ""
-  );
-  const [customRate, setCustomRate] = useState(
-    !presetOptions.some((o) => o.label === currentTaxName) && currentTaxName !== "none"
-      ? Number(currentTaxRate) || 0
-      : 0
-  );
+const Taxes = ({ formData, setFormData, setTaxSelected }) => {
+  const [selectedKey, setSelectedKey] = useState("");
+  const [customName, setCustomName] = useState("Custom"); // ✅ Default "Custom"
+  const [customRate, setCustomRate] = useState("0"); // ✅ Default 0
 
   const customNameRef = useRef(null);
   const customRateRef = useRef(null);
 
-  // Update formData when selection changes
+  // Initialize selected tax from formData
+  useEffect(() => {
+    const taxObj = formData.otherSettings?.tax || {};
+    const taxEntries = Object.entries(taxObj);
+
+    if (taxEntries.length === 0) {
+      setSelectedKey("none");
+      return;
+    }
+
+    const [label, rate] = taxEntries[0];
+
+    const preset = presetOptions.find((opt) => opt.label === label);
+    if (preset) {
+      setSelectedKey(preset.key);
+    } else {
+      setSelectedKey("custom");
+      setCustomName(label || "Custom");
+      setCustomRate(rate?.toString() || "0");
+    }
+  }, [formData.otherSettings?.tax]);
+
+  // Focus custom name input only once when selected
   useEffect(() => {
     if (selectedKey === "custom") {
-      if (!customName) return;
+      customNameRef.current?.focus();
+    }
+  }, [selectedKey]);
+
+  // Update formData whenever tax inputs change
+  useEffect(() => {
+    if (!selectedKey) return;
+
+    if (selectedKey === "custom") {
+      const rate = parseFloat(customRate) || 0;
       setFormData((prev) => ({
         ...prev,
         otherSettings: {
           ...prev.otherSettings,
-          tax: { [customName]: Number(customRate) || 0 },
+          tax: { [customName || "Custom"]: rate },
         },
       }));
     } else {
@@ -89,11 +80,11 @@ const Taxes = ({ formData, setFormData }) => {
         }));
       }
     }
-  }, [selectedKey, customName, customRate, setFormData]);
 
-  useEffect(() => {
-    if (selectedKey === "custom") customNameRef.current?.focus();
-  }, [selectedKey]);
+    setTaxSelected(true);
+  }, [selectedKey, customName, customRate, setFormData, setTaxSelected]);
+
+ 
 
   return (
     <>
@@ -142,7 +133,6 @@ const Taxes = ({ formData, setFormData }) => {
                     <div className={`font-semibold text-xl ${checked ? "text-brand-700" : "text-slate-800"}`}>
                       {opt.label}
                     </div>
-                    {opt.sub && <div className="text-base text-slate-500">{opt.sub}</div>}
 
                     {opt.custom && checked && (
                       <div className="mt-2 flex lg:flex-row flex-col items-start lg:items-center gap-2 overflow-hidden">
@@ -157,12 +147,10 @@ const Taxes = ({ formData, setFormData }) => {
                           <input
                             ref={customRateRef}
                             type="number"
-                            min="0"
-                            step="0.01"
-                            className="w-10 rounded-lg border border-slate-300 px-2 py-1 text-base"
+                            className="w-16 rounded-lg border border-slate-300 px-2 py-1 text-base"
                             placeholder="Rate %"
                             value={customRate}
-                            onChange={(e) => setCustomRate(e.target.value)}
+                            onChange={(e)=>setCustomRate(e.target.value)}
                           />
                           <span className="text-base text-slate-500">%</span>
                         </div>
@@ -173,7 +161,11 @@ const Taxes = ({ formData, setFormData }) => {
                   </div>
                 </div>
 
-                {checked && <div className="absolute right-3 top-3 text-brand-600 text-2xl"><FaCircleCheck /></div>}
+                {checked && (
+                  <div className="absolute right-3 top-3 text-brand-600 text-2xl">
+                    <FaCircleCheck />
+                  </div>
+                )}
               </div>
             );
           })}

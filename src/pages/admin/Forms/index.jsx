@@ -3,6 +3,7 @@ import {
   FiPlus, FiCopy, FiTrash2, FiEdit, FiClipboard, FiSearch, 
   FiChevronLeft, FiChevronRight, FiLoader 
 } from "react-icons/fi";
+import { FaClipboard,FaLink } from "react-icons/fa6";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -28,7 +29,7 @@ export default function Forms() {
   const [actionLoading, setActionLoading] = useState(null);
 
   const navigate = useNavigate();
-  const site_url = window.location.origin;
+  const site_url = 'https://av-canada.com/order/client';
 
   useEffect(() => {
     fetchForms();
@@ -222,7 +223,7 @@ export default function Forms() {
           <tbody className="main-card-box-row">
             {filteredForms.map(form => (
               <tr key={form.id} className="border-t">
-                <td className="px-3 py-2 font-medium" data-label="Form Title">{form.form_title}</td>
+                <td className="px-3 py-2 font-medium" data-label="Form Title">{form.form_title} (ID:#{form.id})</td>
                 <td className="px-3 py-2" data-label="Company Name">{form.company_name || "-"}</td>
                 <td className="px-3 py-2" data-label="Date">{formatDate(form.created_at)}</td>
                 <td className="px-3 py-2" data-label="Access Code">
@@ -240,7 +241,7 @@ export default function Forms() {
                         {isActionLoading(`copy-code-${form.id}`) ? (
                           <FiLoader className="animate-spin" size={14} />
                         ) : (
-                          <FiCopy size={14} />
+                          <FaClipboard size={14} />
                         )}
                       </button>
                     )}
@@ -288,7 +289,7 @@ export default function Forms() {
                       {isActionLoading(`copy-url-${form.id}`) ? (
                         <FiLoader className="animate-spin" size={14} />
                       ) : (
-                        <FiClipboard size={12} />
+                        <FaLink size={12} />
                       )}
                     </button>
                   </div>

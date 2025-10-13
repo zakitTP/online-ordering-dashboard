@@ -34,7 +34,7 @@ function App() {
   }, [dispatch]);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/order/admin">
       <Routes> 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />

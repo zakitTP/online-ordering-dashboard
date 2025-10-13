@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
@@ -25,10 +24,11 @@ const EditForm = () => {
   const { user } = useSelector((state) => state.user);
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [activeStep, setActiveStep] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const [taxSelected, setTaxSelected] = useState(false);
 
   const [formData, setFormData] = useState({
     formTitle: "",
@@ -52,6 +52,7 @@ const EditForm = () => {
     otherSettings: { tax: {} },
   });
 
+  console.log(formData)
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState({
@@ -60,56 +61,58 @@ const EditForm = () => {
   });
 
   // Fetch existing form
- useEffect(() => {
-  setLoading(true);
-  apiClient
-    .get(`/api/forms/${id}`)
-    .then((res) => {
-      const data = res.data.form;
+  useEffect(() => {
+    setLoading(true);
+    apiClient
+      .get(`/api/forms/${id}`)
+      .then((res) => {
+        const data = res.data.form;
 
-      // Parse tax if it's a string
-      let taxObj = {};
-      try {
-        if (data.other_settings?.tax) {
-          taxObj =
-            typeof data.other_settings.tax === "string"
-              ? JSON.parse(data.other_settings.tax)
-              : data.other_settings.tax;
+        // Parse tax if it's a string
+        let taxObj = {};
+        try {
+          if (data.other_settings?.tax) {
+            
+            taxObj =
+              typeof data.other_settings.tax === "string"
+                ? JSON.parse(data.other_settings.tax)
+                : data.other_settings.tax;
+
+            if (taxObj && Object.keys(taxObj).length) setTaxSelected(true);
+          }
+        } catch (e) {
+          console.error("Failed to parse tax:", e);
         }
-      } catch (e) {
-        console.error("Failed to parse tax:", e);
-      }
 
-      setFormData({
-        formTitle: data.form_title,
-        contactName: data.contact_name,
-        contactEmail: data.contact_email,
-        contactPhone: data.contact_phone,
-        companyName: data.company_name,
-        companyLogo: data.company_logo,
-        companyLogoUrl: data.company_logo_url,
-        showName: data.event_info?.showName || "",
-        facility: data.event_info?.facility || "",
-        room: data.event_info?.room || "",
-        loadInDate: data.event_info?.loadInDate || "",
-        loadInTime: data.event_info?.loadInTime || "",
-        startDate: data.event_info?.startDate || "",
-        startTime: data.event_info?.startTime || "",
-        finishDate: data.event_info?.finishDate || "",
-        finishTime: data.event_info?.finishTime || "",
-        products: data.product_select || [],
-        status: data.status || "",
-        accessCode: data.access_code || "",
-        otherSettings: { ...data.other_settings, tax: taxObj },
-      });
+        setFormData({
+          formTitle: data.form_title,
+          contactName: data.contact_name,
+          contactEmail: data.contact_email,
+          contactPhone: data.contact_phone,
+          companyName: data.company_name,
+          companyLogo: data.company_logo,
+          companyLogoUrl: data.company_logo_url,
+          showName: data.event_info?.showName || "",
+          facility: data.event_info?.facility || "",
+          room: data.event_info?.room || "",
+          loadInDate: data.event_info?.loadInDate || "",
+          loadInTime: data.event_info?.loadInTime || "",
+          startDate: data.event_info?.startDate || "",
+          startTime: data.event_info?.startTime || "",
+          finishDate: data.event_info?.finishDate || "",
+          finishTime: data.event_info?.finishTime || "",
+          products: data.product_select || [],
+          status: data.status || "",
+          accessCode: data.access_code || "",
+          otherSettings: { ...data.other_settings, tax: taxObj },
+        });
 
-      setSelectedProducts(res.data.products || []);
-    })
-    .catch(() => toast.error("Failed to load form data"))
-    .finally(() => setLoading(false));
-}, [id]);
-
-  // Handle input change
+        setSelectedProducts(res.data.products || []);
+      })
+      .catch(() => toast.error("Failed to load form data"))
+      .finally(() => setLoading(false));
+  }, [id]);
+console.log(formData)
   const handleInputChange = (e) => {
     const { name, value, files, type } = e.target;
     if (type === "file") {
@@ -118,6 +121,27 @@ const EditForm = () => {
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const formatFieldName = (fieldName) => {
+    const fieldNameMap = {
+      formTitle: "Form Title",
+      contactName: "Contact Name",
+      contactEmail: "Contact Email",
+      contactPhone: "Contact Phone",
+      companyName: "Company Name",
+      companyLogo: "Company Logo",
+      showName: "Show Name",
+      facility: "Facility",
+      room: "Room",
+      loadInDate: "Load In Date",
+      loadInTime: "Load In Time",
+      startDate: "Start Date",
+      startTime: "Start Time",
+      finishDate: "Finish Date",
+      finishTime: "Finish Time",
+    };
+    return fieldNameMap[fieldName] || fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   };
 
   const validateForm = (status) => {
@@ -144,7 +168,7 @@ const EditForm = () => {
 
     for (let field of requiredFields) {
       if (!formData[field]) {
-        toast.error(`Please fill ${field}`);
+        toast.error(`Please fill ${formatFieldName(field)}`);
         return false;
       }
     }
@@ -154,93 +178,93 @@ const EditForm = () => {
       return false;
     }
 
+    if (!taxSelected) {
+      toast.error("Please select a tax option");
+      return false;
+    }
+
     return true;
   };
 
-const saveForm = async (status) => {
-  if (!validateForm(status)) return;
+  const saveForm = async (status) => {
+    if (!validateForm(status)) return;
 
-  setSaving(true);
-  try {
-    const payload = new FormData();
+    setSaving(true);
+    try {
+      const payload = new FormData();
 
-    payload.append("user_id", user.id);
-    payload.append("form_title", formData.formTitle);
-    payload.append("contact_name", formData.contactName);
-    payload.append("contact_email", formData.contactEmail);
-    payload.append("contact_phone", formData.contactPhone);
-    payload.append("company_name", formData.companyName);
+      payload.append("user_id", user.id);
+      payload.append("form_title", formData.formTitle);
+      payload.append("contact_name", formData.contactName);
+      payload.append("contact_email", formData.contactEmail);
+      payload.append("contact_phone", formData.contactPhone);
+      payload.append("company_name", formData.companyName);
 
-    if (formData.companyLogo instanceof File) {
-      payload.append("company_logo", formData.companyLogo);
-    }
+      if (formData.companyLogo instanceof File) {
+        payload.append("company_logo", formData.companyLogo);
+      }
 
-    // Send event_info as array
-    const eventFields = [
-      "showName",
-      "facility",
-      "room",
-      "loadInDate",
-      "loadInTime",
-      "startDate",
-      "startTime",
-      "finishDate",
-      "finishTime",
-    ];
+      const eventFields = [
+        "showName",
+        "facility",
+        "room",
+        "loadInDate",
+        "loadInTime",
+        "startDate",
+        "startTime",
+        "finishDate",
+        "finishTime",
+      ];
 
-    eventFields.forEach((key) => {
-      payload.append(`event_info[${key}]`, formData[key] || "");
-    });
+      eventFields.forEach((key) => {
+        payload.append(`event_info[${key}]`, formData[key] || "");
+      });
 
-    // Send products as array
-    formData.products.forEach((productId, index) => {
-      payload.append(`product_select[${index}]`, productId);
-    });
+      formData.products.forEach((productId, index) => {
+        payload.append(`product_select[${index}]`, productId);
+      });
 
-    // Send other_settings as array
-    Object.entries(formData.otherSettings || {}).forEach(([key, value]) => {
-      // If nested object, convert to JSON string
-      payload.append(
-        `other_settings[${key}]`,
-        typeof value === "object" ? JSON.stringify(value) : value
+      Object.entries(formData.otherSettings || {}).forEach(([key, value]) => {
+        payload.append(
+          `other_settings[${key}]`,
+          typeof value === "object" ? JSON.stringify(value) : value
+        );
+      });
+
+      payload.append("status", status);
+
+      const res = await apiClient.post(`/api/forms/${id}`, payload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "X-HTTP-Method-Override": "PUT",
+        },
+      });
+
+      const updatedForm = res.data;
+
+      setFormData((prev) => ({
+        ...prev,
+        status: updatedForm.status,
+        accessCode: updatedForm.access_code,
+      }));
+
+      toast.success(
+        `Form ${status === "draft" ? "saved as draft" : "published"} successfully`
       );
-    });
 
-    payload.append("status", status);
-
-    const res = await apiClient.post(`/api/forms/${id}`, payload, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        "X-HTTP-Method-Override": "PUT",
-      },
-    });
-
-    const updatedForm = res.data;
-
-    setFormData((prev) => ({
-      ...prev,
-      status: updatedForm.status,
-      accessCode: updatedForm.access_code,
-    }));
-
-    toast.success(
-      `Form ${status === "draft" ? "saved as draft" : "published"} successfully`
-    );
-
-    const formUrl = `${window.location.origin}/orderform/${id}`;
-    setModalContent({
-      accessCode: updatedForm.access_code,
-      formUrl,
-    });
-    setModalVisible(true);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to save form!");
-  } finally {
-    setSaving(false);
-  }
-};
-
+      const formUrl = `https://av-canada.com/order/client/orderform/${id}`;
+      setModalContent({
+        accessCode: updatedForm.access_code,
+        formUrl,
+      });
+      setModalVisible(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save form!");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleSaveDraft = (e) => {
     e.preventDefault();
@@ -267,22 +291,16 @@ const saveForm = async (status) => {
   const activeTab = "bg-brand-600 text-white";
   const inactiveTab = "bg-white";
 
-    if (loading) {
-
+  if (loading) {
     return (
-
       <div className="flex items-center justify-center min-h-screen">
-
-       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
-
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
       </div>
-
     );
-
   }
 
   return (
-    <section id="wizardSection" className="border rounded-lg overflow-hidden shadow-md ">
+    <section id="wizardSection" className="border rounded-lg overflow-hidden shadow-md">
       <ToastContainer position="top-right" autoClose={3000} />
       {saving && (
         <div className="fixed inset-0 bg-black/30 z-50 grid place-items-center">
@@ -297,9 +315,7 @@ const saveForm = async (status) => {
       >
         <button
           data-step="1"
-          className={`${stepBtnBase} ${
-            activeStep === 1 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 1 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(1)}
           type="button"
         >
@@ -308,9 +324,7 @@ const saveForm = async (status) => {
 
         <button
           data-step="2"
-          className={`${stepBtnBase} ${
-            activeStep === 2 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 2 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(2)}
           type="button"
         >
@@ -319,9 +333,7 @@ const saveForm = async (status) => {
 
         <button
           data-step="3"
-          className={`${stepBtnBase} ${
-            activeStep === 3 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 3 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(3)}
           type="button"
         >
@@ -330,9 +342,7 @@ const saveForm = async (status) => {
 
         <button
           data-step="4"
-          className={`${stepBtnBase} ${
-            activeStep === 4 ? activeTab : inactiveTab
-          }`}
+          className={`${stepBtnBase} ${activeStep === 4 ? activeTab : inactiveTab}`}
           onClick={() => setActiveStep(4)}
           type="button"
         >
@@ -342,12 +352,10 @@ const saveForm = async (status) => {
 
       {/* Steps */}
       <form className="p-4 md:p-4 lg:p-6 space-y-10">
-        {/* Step 1 */}
         {activeStep === 1 && (
           <section>
             <h3 className="font-bold text-2xl mb-4">Form Details</h3>
             <FormDetail formData={formData} onInputChange={handleInputChange} />
-
             <div className="flex items-center justify-end gap-3 mt-8 text-xl">
               <button
                 type="button"
@@ -367,7 +375,6 @@ const saveForm = async (status) => {
           </section>
         )}
 
-        {/* Step 2 */}
         {activeStep === 2 && (
           <section>
             <EventInfo formData={formData} onInputChange={handleInputChange} setFormData={setFormData} />
@@ -390,7 +397,6 @@ const saveForm = async (status) => {
           </section>
         )}
 
-        {/* Step 3 */}
         {activeStep === 3 && (
           <section>
             <h3 className="font-bold text-2xl mb-4">Product Selection</h3>
@@ -421,10 +427,9 @@ const saveForm = async (status) => {
           </section>
         )}
 
-        {/* Step 4 */}
         {activeStep === 4 && (
           <section>
-            <Taxes formData={formData} setFormData={setFormData} />
+            <Taxes formData={formData} setFormData={setFormData} setTaxSelected={setTaxSelected} />
             <div className="flex items-center justify-end gap-3 mt-8 text-xl">
               <button
                 type="button"
@@ -475,7 +480,7 @@ const saveForm = async (status) => {
             </div>
             <button
               onClick={handleModalOk}
-              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center "
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
             >
               OK
             </button>
@@ -487,4 +492,3 @@ const saveForm = async (status) => {
 };
 
 export default EditForm;
-

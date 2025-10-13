@@ -2,20 +2,20 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
-import { useLoaderData, useNavigate } from "react-router-dom";
-import { useSelector,useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
 import { setUser } from "../../../lib/userSlice";
 import "react-toastify/dist/ReactToastify.css";
 
-// Get API base URL from Vite .env
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function Login() {
- const dispatch = useDispatch();
+  const dispatch = useDispatch();
+  const { user, loading: userLoader } = useSelector((state) => state.user);
 
-  const { user,loading:userLoader } = useSelector((state) => state.user);
   const [step, setStep] = useState("login");
-  const [phone, setPhone] = useState("");
+  const [type, setType] = useState("phone"); // "phone" or "email"
+  const [value, setValue] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(true);
@@ -24,15 +24,14 @@ export default function Login() {
   const otpRefs = useRef([]);
 
   useEffect(() => {
-    if(userLoader == false){
+    if (userLoader === false) {
       if (user) {
         navigate("/dashboard", { replace: true });
-      } else{
-        setRedirecting(false)
+      } else {
+        setRedirecting(false);
       }
     }
-  
-  }, [user,userLoader]);
+  }, [user, userLoader]);
 
   const handleApiCall = async (url, data, successMsg, errorMsg) => {
     try {
@@ -50,13 +49,15 @@ export default function Login() {
 
   const sendOtp = async (e) => {
     e.preventDefault();
-    if (!phone) return toast.error("Enter your phone number!");
+    if (!value) return toast.error(`Enter your ${type}!`);
+
     const data = await handleApiCall(
       `${API_BASE_URL}/api/send-otp`,
-      { phone },
-      "OTP sent successfully!",
-      "Failed to send OTP"
+      { type, value },
+      `OTP sent to your ${type}!`,
+      `Failed to send OTP to ${type}`
     );
+
     if (data) setStep("verify");
   };
 
@@ -68,14 +69,14 @@ export default function Login() {
     const code = otp.join("");
     const data = await handleApiCall(
       `${API_BASE_URL}/api/verify-otp`,
-      { phone, otp: code },
+      { type, value, otp: code },
       "Login successful!",
       "Invalid OTP!"
     );
-    
+
     if (data) {
-       dispatch(setUser(data?.user))
-       navigate("/dashboard", { replace: true });
+      dispatch(setUser(data?.user));
+      navigate("/dashboard", { replace: true });
     }
   };
 
@@ -103,11 +104,10 @@ export default function Login() {
 
   const backToLogin = () => {
     setStep("login");
-    setPhone("");
+    setValue("");
     setOtp(["", "", "", "", "", ""]);
   };
 
-  // Show loader while deciding redirect
   if (redirecting) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -127,34 +127,72 @@ export default function Login() {
               <div className="px-6 pt-6 pb-4">
                 <h1 className="text-3xl font-bold text-black">Welcome back</h1>
                 <p className="text-base text-black mt-1">
-                  Sign in with your phone number.
+                  Sign in with your {type}.
                 </p>
               </div>
 
               <form onSubmit={sendOtp} className="px-6 pb-6 space-y-4" noValidate>
+                {/* Switch between phone or email */}
+               {/* Select verification method */}
+<div className="flex justify-center mb-6">
+  <div className="relative flex bg-slate-100 rounded-full p-1 shadow-inner w-72">
+    <button
+      type="button"
+      onClick={() => {
+        setType("phone");
+        setValue("");
+      }}
+      className={`flex-1 text-center py-2 text-base font-semibold rounded-full transition-all duration-200 
+        ${type === "phone"
+          ? "bg-brand-600 text-white shadow-md scale-105"
+          : "text-slate-600 hover:text-brand-600"}`}
+    >
+      Phone
+    </button>
+    <button
+      type="button"
+      onClick={() => {
+        setType("email");
+        setValue("");
+      }}
+      className={`flex-1 text-center py-2 text-base font-semibold rounded-full transition-all duration-200 
+        ${type === "email"
+          ? "bg-brand-600 text-white shadow-md scale-105"
+          : "text-slate-600 hover:text-brand-600"}`}
+    >
+      Email
+    </button>
+  </div>
+</div>
+
+
+                {/* Input field */}
                 <div>
                   <label
-                    htmlFor="phone"
+                    htmlFor="value"
                     className="block text-black text-base font-medium mb-1"
                   >
-                    Phone Number
+                    {type === "phone" ? "Phone Number" : "Email Address"}
                   </label>
                   <input
-  id="phone"
-  name="phone"
-  type="text"
-  required
-  placeholder="91 12345 67890"
-  value={phone}
-  onChange={(e) => {
-    // Allow only digits
-    const value = e.target.value.replace(/[^0-9]/g, "");
-    setPhone(value);
-  }}
-  inputMode="numeric"
-  pattern="[0-9]*"
-  className="w-full rounded border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
-/>
+                    id="value"
+                    name="value"
+                    type={type === "phone" ? "tel" : "email"}
+                    required
+                    placeholder={
+                      type === "phone"
+                        ? "+1 XXXX XXX XXX"
+                        : "example@email.com"
+                    }
+                    value={value}
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (type === "phone") val = val.replace(/[^0-9]/g, "");
+                      setValue(val);
+                    }}
+                    inputMode={type === "phone" ? "numeric" : undefined}
+                    className="w-full rounded border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-600"
+                  />
                 </div>
 
                 <button
@@ -177,7 +215,7 @@ export default function Login() {
               <div className="px-6 pt-6 pb-2 text-center">
                 <h2 className="text-2xl font-bold">Two-Step Verification</h2>
                 <p className="text-sm text-slate-600 mt-1">
-                  Enter the 6-digit code we sent to {phone}.
+                  Enter the 6-digit code sent to your {type}: <b>{value}</b>
                 </p>
               </div>
 
@@ -195,7 +233,7 @@ export default function Login() {
                       inputMode="numeric"
                       pattern="[0-9]*"
                       value={digit}
-                      onChange={() => {}} // noop, handled in onKeyDown
+                      onChange={() => {}}
                       onKeyDown={(e) => handleOtpKeyDown(e, index)}
                     />
                   ))}

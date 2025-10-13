@@ -19,6 +19,7 @@ export default function AddProduct() {
   const [categories, setCategories] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [imageError, setImageError] = useState(""); // ✅ new inline error state
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -37,12 +38,30 @@ export default function AddProduct() {
     setNewProduct({ ...newProduct, [field]: value });
   };
 
+  // ✅ Image upload handler with size/type validation
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.type.match("image.*")) return toast.error("Select an image file!");
-    if (file.size > 5 * 1024 * 1024) return toast.error("Max 5MB allowed!");
+
+    // Validate file type
+    if (!file.type.match("image.*")) {
+      setImageError("Please select an image file!");
+      e.target.value = "";
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setImageError("File size must be less than 5 MB!");
+      e.target.value = "";
+      return;
+    }
+
+    // ✅ Clear error and set image
+    setImageError("");
     setNewProduct({ ...newProduct, image: file });
+
     const reader = new FileReader();
     reader.onload = (e) => setImagePreview(e.target.result);
     reader.readAsDataURL(file);
@@ -61,12 +80,17 @@ export default function AddProduct() {
       excludeConsumable: false,
     });
     setImagePreview(null);
+    setImageError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newProduct.image) return toast.error("Please upload an image!");
+
+    if (!newProduct.image) {
+      setImageError("Please upload an image!");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("title", newProduct.title);
@@ -84,7 +108,7 @@ export default function AddProduct() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success("Product added successfully!");
-      resetForm(); // reset instead of navigate
+      resetForm();
     } catch (err) {
       console.error(err);
       toast.error("Failed to add product!");
@@ -195,6 +219,7 @@ export default function AddProduct() {
           {/* Product Image */}
           <div>
             <label className="text-lg text-black font-medium">Product Image</label>
+            {imageError && <p className="text-red-500 text-sm mt-1">{imageError}</p>}
             <input
               type="file"
               accept="image/*"
