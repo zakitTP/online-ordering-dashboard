@@ -10,7 +10,7 @@ import {
   FiSettings,
   FiX,
 } from "react-icons/fi";
-import Logo from "../assets/logo.png"
+import Logo from "../assets/logo.png";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
@@ -42,6 +42,16 @@ export default function Sidebar() {
     };
   }, []);
 
+  // Close sidebar on mobile when any menu item is clicked
+  const handleNavClick = () => {
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
+      sidebar?.classList.add("-translate-x-full");
+      overlay?.classList.add("hidden");
+    }
+  };
+
   const links = [
     { name: "Dashboard", path: "/dashboard", icon: <FiHome size={18} /> },
     { name: "Forms", path: "/dashboard/forms", icon: <FiFile size={18} /> },
@@ -57,7 +67,8 @@ export default function Sidebar() {
       <aside
         id="sidebar"
         className="dashboard-sidebar fixed md:static inset-y-0 left-0 z-99 w-72 md:w-64 bg-black text-white border-r border-slate-200 shadow-md md:shadow-none transform -translate-x-full md:translate-x-0 transition-transform duration-300 "
-         style={{ zIndex: "999999" }}>
+        style={{ zIndex: "999999" }}
+      >
         <div className="h-full flex flex-col">
           <div className="flex items-center md:justify-center justify-between px-4 py-4 border-b border-slate-200">
             <div className="flex items-center gap-2">
@@ -80,6 +91,7 @@ export default function Sidebar() {
                   <li key={path}>
                     <Link
                       to={path}
+                      onClick={handleNavClick}
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded font-medium transition-colors ${
                         active ? "bg-[#C81A1F] text-white" : "hover:bg-[#C81A1F]"
                       }`}
