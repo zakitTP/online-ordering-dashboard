@@ -214,26 +214,26 @@ export default function Orders() {
       {/* Delete Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md mx-4 rounded-lg border border-slate-200 bg-white shadow-xl p-6">
+          <div className="mx-4 rounded-lg border border-slate-200 bg-white shadow-xl p-6 w-96">
             <h3 className="text-2xl text-black font-bold">Delete order?</h3>
             <p className="text-base text-black my-3">
               Are you sure you want to delete this order?
             </p>
-            <div className="mt-1 flex justify-end gap-2">
+            <div className="mt-2 flex justify-end gap-2">
               <button
                 onClick={() => setDeleteId(null)}
-                className="px-4 py-2 rounded bg-gray-400 text-white"
+                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleteLoading}
-                className={`px-4 py-2 rounded bg-black text-white ${
+                className={`px-3 md:px-5 py-3 rounded bg-black text-white text-xl w-32 text-center ${
                   deleteLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                {deleteLoading ? "Deleting..." : "OK"}
+                {deleteLoading ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>
