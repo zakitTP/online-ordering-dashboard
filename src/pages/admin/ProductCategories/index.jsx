@@ -148,9 +148,9 @@ export default function CategoriesPage() {
     ) : (
       categories.map((cat) => (
         <tr key={cat.id} className="border-t hover:bg-gray-50">
-          <td className="px-3 py-2">{cat.id}</td>
-          <td className="px-3 py-2 font-medium">{cat.name}</td>
-          <td className="px-3 py-2 text-center">
+          <td className="px-3 py-2" data-label="ID">{cat.id}</td>
+          <td className="px-3 py-2 font-medium" data-label="Category">{cat.name}</td>
+          <td className="px-3 py-2 text-center" data-label="Type">
             {cat.includeMounting && cat.includeAccessories
               ? "Mounting + Accessories"
               : cat.includeMounting
@@ -159,7 +159,10 @@ export default function CategoriesPage() {
               ? "Accessories"
               : ""}
           </td>
-          <td className="px-3 py-2 text-center flex justify-center gap-2">
+
+          
+          <td className="px-3 py-2 text-center " data-label="Actions">
+            <div class="mobile-action-btns flex gap-2 xl:justify-center justify-start">
             <button
               onClick={() => {
                 setSelectedCategory(cat);
@@ -181,6 +184,7 @@ export default function CategoriesPage() {
             >
               <FiTrash2 size={14} />
             </button>
+            </div>
           </td>
         </tr>
       ))
@@ -188,8 +192,13 @@ export default function CategoriesPage() {
   </tbody>
             </table>
           )}
+
+          
         </div>
+
+        
       </div>
+      
 
       {/* Add Category Modal */}
       {showAddModal && (

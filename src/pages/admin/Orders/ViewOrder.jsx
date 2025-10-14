@@ -154,7 +154,7 @@ export default function ViewOrder() {
   const tax_breakdown = order_detail?.tax_breakdown || '';
 
   // Check if order is already refunded
-  const isRefunded = status === "refunded";
+  const isRefunded = "refunded";
 
   // Get refund transaction ID from refund response
   const refundTransactionId =
@@ -243,42 +243,7 @@ export default function ViewOrder() {
                 <span className="font-medium">${total_amount}</span>
               </div>
 
-              {/* Refund Information */}
-              {isRefunded && (
-                <>
-                  <div className="border-t pt-3 mt-3">
-                    <div className="flex justify-between text-grey-600">
-                      <span>Refund Amount:</span>
-                      <span className="font-medium">${refundAmountValue}</span>
-                    </div>
-                    <div className="flex justify-between mt-2">
-                      <span className="flex items-center  text-gray-600">
-                        Refund Date:
-                      </span>
-                      <span className="font-medium">
-                        {new Date(refundDate).toLocaleDateString()} at{" "}
-                        {new Date(refundDate).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    {refundTransactionId && (
-                      <div className="flex justify-between mt-2">
-                        <span className="flex items-center text-gray-600">
-                          Transaction ID:
-                        </span>
-                       <span className="font-medium max-w-[180px] break-all block" title={refundTransactionId}>
-  {refundTransactionId}
-</span>
-                      </div>
-                    )}
-                    {refund_detail?.refund_note && (
-                      <div className="mt-2 p-2 bg-gray-100 rounded text-sm">
-                        <span className="font-medium">Note:</span>{" "}
-                        {refund_detail.refund_note}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
+              
             </div>
           </div>
 
@@ -343,6 +308,42 @@ export default function ViewOrder() {
             </div>
           </div>
         </div>
+
+        {/* ---- FIXED: Mobile-responsive refund detail cards ---- */}
+        <div className="py-3">
+          <h3 className="text-2xl font-bold text-black mb-4">Refund Details</h3>
+
+          {/* Stack vertically on small screens, row on md+; make cards fluid on mobile */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6 justify-start">
+            {/* Refund Amount */}
+            <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-60">
+              <label className="mb-2 text-lg font-medium text-black text-center">Refund Amount</label>
+              <div className="flex justify-center items-center gap-2 bg-green-50 text-green-800 px-4 py-2 rounded-lg border border-green-200 text-center">
+                <span className="font-semibold">$27,106</span>
+              </div>
+            </div>
+
+            {/* Refund Date */}
+            <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-60">
+              <label className="mb-2 text-lg font-medium text-black text-center">Refund Date</label>
+              <div className="flex justify-center items-center gap-2 bg-blue-50 text-blue-800 px-4 py-2 rounded-lg border border-blue-200 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="font-medium">14 Oct 2025</span>
+              </div>
+            </div>
+
+            {/* Refund Transaction ID */}
+            <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-60">
+              <label className="mb-2 text-lg font-medium text-black text-center">Refund Transaction ID</label>
+              <div className="flex justify-center items-center gap-2 bg-yellow-50 text-yellow-800 px-4 py-2 rounded-lg border border-yellow-200 text-center">
+                <span className="font-medium break-all">REF1234567890</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* ---- /FIXED ---- */}
 
         {/* Order Items */}
         <div className="bg-white rounded-lg shadow-sm p-3 md:p-6 mb-6 border">

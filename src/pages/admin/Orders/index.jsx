@@ -64,7 +64,7 @@ export default function Orders() {
         </div>
 
         {/* Filters */}
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 mb-4">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 mb-4">
           <div className="flex items-center gap-2 px-3 py-2 rounded border border-slate-300">
             <FiSearch className="text-slate-500" />
             <input
@@ -73,7 +73,7 @@ export default function Orders() {
                 setSearch(e.target.value);
                 setPage(1); // reset to page 1 when searching
               }}
-              placeholder="Search order ID, customer…"
+              placeholder="Search with form title, Order ID, Customer name…"
               className="w-full outline-none text-lg"
             />
           </div>
@@ -115,15 +115,15 @@ export default function Orders() {
                     <th className="text-center font-medium px-3 py-2">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="main-card-box-row">
                   {orders.map((order) => (
                     <tr key={order.id} className="border-t">
-                      <td className="px-3 py-2 font-medium">#{order.id}</td>
-                      <td className="px-3 py-2">{order?.form?.form_title} (ID:#{order?.form?.id})</td>
-                      <td className="px-3 py-2">{order?.form?.company_name}</td>
-                      <td className="px-3 py-2 text-left">₹{order.total_amount}</td>
-                      <td className="px-3 py-2">
-                       <td className="px-3 py-2">
+                      <td className="px-3 py-2 font-medium" data-label="Order ID">#{order.id}</td>
+                      <td className="px-3 py-2" data-label="Form Title">{order?.form?.form_title} (ID:#{order?.form?.id})</td>
+                      <td className="px-3 py-2" data-label="Company Name">{order?.form?.company_name}</td>
+                      <td className="px-3 py-2 text-left" data-label="Total">₹{order.total_amount}</td>
+                      <td className="px-3 py-2" data-label="Status">
+                       
   {(() => {
     let colorClasses = "border-gray-400 bg-gray-200 text-gray-800"; // default
 
@@ -144,20 +144,20 @@ export default function Orders() {
 
     return (
       <span
-        className={`inline-flex px-3 py-0.5 rounded-full border capitalize text-sm font-medium ${colorClasses}`}
-      >
+        className={`inline-flex max-w-fit px-3 py-0.5 rounded-full border capitalize text-sm font-medium ${colorClasses}`}
+      style={{ maxWidth: "fit-content" }}>
         {order.status}
       </span>
     );
   })()}
 </td>
 
-                      </td>
-                      <td className="px-3 py-2">
+                     
+                      <td className="px-3 py-2" data-label="Date">
                         {new Date(order.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-3 py-2 text-center">
-                        <div className="flex justify-center gap-2">
+                      <td className="px-3 py-2 text-center" data-label="Actions">
+                        <div className="flex xl:justify-center justify-start gap-2">
                           <Link
                             to={`/dashboard/orders/${order.id}`}
                             className="px-2 py-1 rounded bg-black text-white text-sm flex items-center gap-1"
@@ -179,7 +179,7 @@ export default function Orders() {
 
               {/* Pagination */}
               {/* Improved Pagination */}
-<div className="flex items-center justify-center gap-3 mt-6">
+<div className="flex items-center justify-between gap-3 mt-6">
   <p className="text-slate-600">
     {Math.min((page - 1) * orders.length + 1, orders.length)}–
     {Math.min(page * orders.length, totalPages * orders.length)} of{" "}

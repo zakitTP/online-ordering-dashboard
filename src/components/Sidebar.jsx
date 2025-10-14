@@ -56,8 +56,8 @@ export default function Sidebar() {
     <>
       <aside
         id="sidebar"
-        className="dashboard-sidebar fixed md:static inset-y-0 left-0 z-99 w-72 md:w-64 bg-black text-white border-r border-slate-200 shadow-md md:shadow-none transform -translate-x-full md:translate-x-0 transition-transform duration-300"
-      >
+        className="dashboard-sidebar fixed md:static inset-y-0 left-0 z-99 w-72 md:w-64 bg-black text-white border-r border-slate-200 shadow-md md:shadow-none transform -translate-x-full md:translate-x-0 transition-transform duration-300 "
+         style={{ zIndex: "999999" }}>
         <div className="h-full flex flex-col">
           <div className="flex items-center md:justify-center justify-between px-4 py-4 border-b border-slate-200">
             <div className="flex items-center gap-2">
