@@ -51,7 +51,9 @@ export default function CategoriesPage() {
       setShowAddModal(false);
       fetchCategories();
     } catch (err) {
-      toast.error(err.response?.data?.errors?.name?.[0] || "Failed to add category");
+      toast.error(
+        err.response?.data?.errors?.name?.[0] || "Failed to add category"
+      );
     } finally {
       setActionLoading(false);
     }
@@ -132,73 +134,68 @@ export default function CategoriesPage() {
             <table className="min-w-full text-sm db-back-table responsive">
               <thead>
                 <tr>
-                  <th className="text-left font-medium px-3 py-2">ID</th>
+                  <th className="text-left font-medium px-3 py-2">Sr.No</th>
                   <th className="text-left font-medium px-3 py-2">Category</th>
                   <th className="text-center font-medium px-3 py-2">Type</th>
                   <th className="text-center font-medium px-3 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody className="main-card-box-row">
-    {categories.length === 0 ? (
-      <tr>
-        <td colSpan="4" className="px-3 py-6 text-center text-gray-500">
-          No categories found
-        </td>
-      </tr>
-    ) : (
-      categories.map((cat) => (
-        <tr key={cat.id} className="border-t hover:bg-gray-50">
-          <td className="px-3 py-2" data-label="ID">{cat.id}</td>
-          <td className="px-3 py-2 font-medium" data-label="Category">{cat.name}</td>
-          <td className="px-3 py-2 text-center" data-label="Type">
-            {cat.includeMounting && cat.includeAccessories
-              ? "Mounting + Accessories"
-              : cat.includeMounting
-              ? "Mounting"
-              : cat.includeAccessories
-              ? "Accessories"
-              : ""}
-          </td>
+            {categories.length === 0 ? (
+  <tr>
+    <td colSpan="4" className="px-3 py-6 text-center text-gray-500">
+      No categories found
+    </td>
+  </tr>
+) : (
+  categories.map((cat, index) => (
+    <tr key={cat.id} className="border-t hover:bg-gray-50">
+      <td className="px-3 py-2" data-label="Sr.No">{index + 1}</td>
+      <td className="px-3 py-2 font-medium" data-label="Category">{cat.name}</td>
+      <td className="px-3 py-2 text-center" data-label="Type">
+        {cat.includeMounting && cat.includeAccessories
+          ? "Mounting + Accessories"
+          : cat.includeMounting
+          ? "Mounting"
+          : cat.includeAccessories
+          ? "Accessories"
+          : "Product"}
+      </td>
 
-          
-          <td className="px-3 py-2 text-center " data-label="Actions">
-            <div class="mobile-action-btns flex gap-2 xl:justify-center justify-start">
-            <button
-              onClick={() => {
-                setSelectedCategory(cat);
-                setNewCategory(cat.name);
-                setIncludeMounting(cat.includeMounting);
-                setIncludeAccessories(cat.includeAccessories);
-                setShowEditModal(true);
-              }}
-              className="px-2 py-1 rounded bg-black text-white text-sm"
-            >
-              <FiEdit size={14} />
-            </button>
-            <button
-              onClick={() => {
-                setSelectedCategory(cat);
-                setShowDeleteModal(true);
-              }}
-              className="px-2 py-1 rounded bg-red-600 text-white text-xs"
-            >
-              <FiTrash2 size={14} />
-            </button>
-            </div>
-          </td>
-        </tr>
-      ))
-    )}
-  </tbody>
+      <td className="px-3 py-2 text-center" data-label="Actions">
+        <div className="mobile-action-btns flex gap-2 xl:justify-center justify-start">
+          <button
+            onClick={() => {
+              setSelectedCategory(cat);
+              setNewCategory(cat.name);
+              setIncludeMounting(cat.includeMounting);
+              setIncludeAccessories(cat.includeAccessories);
+              setShowEditModal(true);
+            }}
+            className="px-2 py-1 rounded bg-black text-white text-sm"
+          >
+            <FiEdit size={14} />
+          </button>
+          <button
+            onClick={() => {
+              setSelectedCategory(cat);
+              setShowDeleteModal(true);
+            }}
+            className="px-2 py-1 rounded bg-red-600 text-white text-xs"
+          >
+            <FiTrash2 size={14} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  ))
+)}
+
+              </tbody>
             </table>
           )}
-
-          
         </div>
-
-        
       </div>
-      
 
       {/* Add Category Modal */}
       {showAddModal && (
@@ -298,7 +295,9 @@ function CategoryModal({
           }}
         >
           <div>
-            <label className="text-lg text-black font-medium">Category Name</label>
+            <label className="text-lg text-black font-medium">
+              Category Name
+            </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -327,7 +326,9 @@ function CategoryModal({
                 onChange={(e) => setIncludeAccessories(e.target.checked)}
                 disabled={loading}
               />
-              <span className="text-black text-base">Include in Accessories</span>
+              <span className="text-black text-base">
+                Include in Accessories
+              </span>
             </label>
           </div>
 

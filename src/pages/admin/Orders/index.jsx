@@ -73,7 +73,7 @@ export default function Orders() {
                 setSearch(e.target.value);
                 setPage(1); // reset to page 1 when searching
               }}
-              placeholder="Search with form title, Order ID, Customer name…"
+              placeholder="Search with Campany Name, Order ID"
               className="w-full outline-none text-lg"
             />
           </div>
