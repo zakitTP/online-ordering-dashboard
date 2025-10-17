@@ -80,12 +80,14 @@ export default function UserList() {
         {/* Header */}
         <div className="flex items-center gap-2 justify-between mb-4">
           <h3 className="font-bold text-black text-3xl">Users</h3>
+          {user?.role == "super admin" &&
           <Link
             to="/dashboard/adduser"
             className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center gap-1"
           >
             <FiUserPlus /> Add User
           </Link>
+          }
         </div>
 
         {/* Search & Role Filter */}
@@ -120,8 +122,10 @@ export default function UserList() {
                   <th className="text-left font-medium px-3 py-2">Email</th>
                   <th className="text-left font-medium px-3 py-2">Phone</th>
                   <th className="text-left font-medium px-3 py-2">Role</th>
-                           
+                         {user?.role == "super admin"   &&
                   <th className="text-center font-medium px-3 py-2">Actions</th>
+                         }
+
                
                 </tr>
               </thead>
@@ -133,8 +137,10 @@ export default function UserList() {
                     <td className="px-3 py-2 break-all capitalize" data-label="Email">{u.email}</td>
                     <td className="px-3 py-2 capitalize" data-label="Phone">{u.phone || "-"}</td>
                     <td className="px-3 py-2 capitalize" data-label="Role">{u.role}</td>
-                      {user.id !== u.id && 
+                    
+                    {user?.role !== "super admin" ||
                     <td className="px-3 py-2 text-center capitalize" data-label="Action">
+                      {user.id !== u.id && 
                       <div className="mobile-action-btns flex xl:justify-center gap-1">
                         <Link
                           to={`/dashboard/users/edit/${u.id}`}
@@ -149,8 +155,9 @@ export default function UserList() {
                           <FiTrash2 />
                         </button>
                       </div>
-                    </td>
                       }
+                      </td>
+                        }
                   </tr>
                 ))}
               </tbody>

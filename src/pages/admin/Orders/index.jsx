@@ -1,22 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiEye, FiTrash2, FiSearch,FiChevronLeft,FiChevronRight } from "react-icons/fi";
+import { FiEye, FiTrash2, FiSearch,FiChevronLeft,FiChevronRight, FiDownload } from "react-icons/fi";
 import apiClient from "../../../apiClient";
 import { Link } from "react-router-dom";
+import Invoice from "../Invoice";
+import { useSelector } from "react-redux";
 
 export default function Orders() {
+  const invoiceRef = useRef();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
+  const [invoiceOrder, setInvoiceOrder] = useState({});
+    const {user} = useSelector((state) => state.user)
 
   // Delete modal
   const [deleteId, setDeleteId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+useEffect(() => {
+  if (invoiceOrder && Object.keys(invoiceOrder).length > 0) {
+    // Wait a tiny bit to ensure Invoice renders
+    const timer = setTimeout(() => {
+      invoiceRef.current?.generatePDF();
+    }, 300);
 
+    return () => clearTimeout(timer);
+  }
+}, [invoiceOrder]);
   // Fetch orders with filters and pagination
   const fetchOrders = async () => {
     try {
@@ -55,6 +69,9 @@ export default function Orders() {
     fetchOrders();
   }, [page, search, status]);
 
+const handleInvoice = (order) => {
+  setInvoiceOrder({ ...order });
+}
   return (
     <div id="orders" className="view !mt-0">
       <ToastContainer />
@@ -121,7 +138,7 @@ export default function Orders() {
                       <td className="px-3 py-2 font-medium" data-label="Order ID">#{order.id}</td>
                       <td className="px-3 py-2" data-label="Form Title">{order?.form?.form_title} (ID:#{order?.form?.id})</td>
                       <td className="px-3 py-2" data-label="Company Name">{order?.form?.company_name}</td>
-                      <td className="px-3 py-2 text-left" data-label="Total">₹{order.total_amount}</td>
+                      <td className="px-3 py-2 text-left" data-label="Total">${order.total_amount}</td>
                       <td className="px-3 py-2" data-label="Status">
                        
   {(() => {
@@ -164,11 +181,19 @@ export default function Orders() {
                           >
                             <FiEye />
                           </Link>
+                          {user?.role !== "manager" &&
                           <button
                             onClick={() => setDeleteId(order.id)}
                             className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
                           >
                             <FiTrash2 />
+                          </button>
+                            }
+                          <button
+                            onClick={() => handleInvoice(order)}
+                            className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
+                          >
+                            <FiDownload />
                           </button>
                         </div>
                       </td>
@@ -176,7 +201,12 @@ export default function Orders() {
                   ))}
                 </tbody>
               </table>
-
+                     <div style={{ display: "none" }}>
+          <Invoice
+    ref={invoiceRef}
+    order={invoiceOrder}
+  />
+      </div>
               {/* Pagination */}
               {/* Improved Pagination */}
 <div className="flex items-center justify-between gap-3 mt-6">
@@ -240,5 +270,6 @@ export default function Orders() {
         </div>
       )}
     </div>
+
   );
 }

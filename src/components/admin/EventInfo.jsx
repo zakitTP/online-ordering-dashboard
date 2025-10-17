@@ -15,6 +15,12 @@ const EventInfo = ({ formData, onInputChange, setFormData }) => {
   // ✅ Handle logo upload with inline error
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
+     if (!file) return;
+    if (!file.type.match("image.*")) {
+      setLogoError("Please select an image file!");
+      e.target.value = "";
+      return;
+    }
     if (file) {
       const maxSize = 5 * 1024 * 1024; // 5 MB
       if (file.size > maxSize) {
@@ -24,6 +30,36 @@ const EventInfo = ({ formData, onInputChange, setFormData }) => {
       }
       setLogoError("");
       onInputChange(e);
+    }
+  };
+
+  // ✅ Handle room input changes
+  const handleRoomChange = (index, value) => {
+    const updatedRooms = [...formData.rooms];
+    updatedRooms[index] = value;
+    setFormData(prev => ({
+      ...prev,
+      rooms: updatedRooms
+    }));
+  };
+
+
+  // ✅ Add new room field
+  const addRoom = () => {
+    setFormData(prev => ({
+      ...prev,
+      rooms: [...prev.rooms, ""]
+    }));
+  };
+
+  // ✅ Remove room field
+  const removeRoom = (index) => {
+    if (formData.rooms.length > 1) {
+      const updatedRooms = formData.rooms.filter((_, i) => i !== index);
+      setFormData(prev => ({
+        ...prev,
+        rooms: updatedRooms
+      }));
     }
   };
 
@@ -78,6 +114,16 @@ const EventInfo = ({ formData, onInputChange, setFormData }) => {
     formData.finishTime,
     setFormData,
   ]);
+
+  // Initialize rooms array if not present
+  useEffect(() => {
+    if (!formData.rooms || formData.rooms.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        rooms: [""] // Start with one empty room by default
+      }));
+    }
+  }, [setFormData]);
 
   return (
     <>
@@ -152,17 +198,43 @@ const EventInfo = ({ formData, onInputChange, setFormData }) => {
           />
         </div>
 
+        {/* Rooms Repeater Field */}
         <div className="md:col-span-2">
-          <label className="text-base lg:text-lg text-black font-medium">
-            Room
-          </label>
-          <input
-            name="room"
-            value={formData.room}
-            onChange={onInputChange}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-3"
-            placeholder="Room"
-          />
+          <div className="flex justify-between items-center mb-2">
+            <label className="text-base lg:text-lg text-black font-medium">
+              Venue Address
+            </label>
+            <button
+              type="button"
+              onClick={addRoom}
+              className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+            >
+              + Add Room
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {formData?.rooms &&
+            formData?.rooms?.map((room, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <input
+                  value={room}
+                  onChange={(e) => handleRoomChange(index, e.target.value)}
+                  className="flex-1 rounded border border-slate-300 px-3 py-3"
+                  placeholder={`Building-Room ${index + 1}`}
+                />
+                {formData?.rooms.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeRoom(index)}
+                    className="px-3 py-3 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Load-In Fields */}

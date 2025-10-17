@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   FiHome,
   FiFile,
@@ -14,6 +15,7 @@ import Logo from "../assets/logo.png";
 
 export default function Sidebar() {
   const { pathname } = useLocation();
+  const { user } = useSelector((state) => state.user); // ✅ get user data from Redux store
 
   useEffect(() => {
     const sidebar = document.getElementById("sidebar");
@@ -42,7 +44,7 @@ export default function Sidebar() {
     };
   }, []);
 
-  // Close sidebar on mobile when any menu item is clicked
+  // ✅ Close sidebar on mobile when any menu item is clicked
   const handleNavClick = () => {
     if (window.matchMedia("(max-width: 767px)").matches) {
       const sidebar = document.getElementById("sidebar");
@@ -52,21 +54,51 @@ export default function Sidebar() {
     }
   };
 
-  const links = [
-    { name: "Dashboard", path: "/dashboard", icon: <FiHome size={18} /> },
-    { name: "Forms", path: "/dashboard/forms", icon: <FiFile size={18} /> },
-    { name: "Products", path: "/dashboard/products", icon: <FiBox size={18} /> },
-    { name: "Categories", path: "/dashboard/categories", icon: <FiTag size={18} /> },
-    { name: "Orders", path: "/dashboard/orders", icon: <FiClipboard size={18} /> },
-    { name: "Users", path: "/dashboard/users", icon: <FiUsers size={18} /> },
-    { name: "Settings", path: "/dashboard/settings", icon: <FiSettings size={18} /> },
-  ];
+  // ✅ Determine which links user should see
+  const role = user?.role?.toLowerCase() || "guest";
+
+  let links = [];
+
+  if (role === "super admin") {
+    // 👑 Full access
+    links = [
+      { name: "Dashboard", path: "/dashboard", icon: <FiHome size={18} /> },
+      { name: "Forms", path: "/dashboard/forms", icon: <FiFile size={18} /> },
+      { name: "Products", path: "/dashboard/products", icon: <FiBox size={18} /> },
+      { name: "Categories", path: "/dashboard/categories", icon: <FiTag size={18} /> },
+      { name: "Orders", path: "/dashboard/orders", icon: <FiClipboard size={18} /> },
+      { name: "Users", path: "/dashboard/users", icon: <FiUsers size={18} /> },
+      { name: "Settings", path: "/dashboard/settings", icon: <FiSettings size={18} /> },
+    ];
+  } else if (role === "admin") {
+  
+     links = [
+      { name: "Dashboard", path: "/dashboard", icon: <FiHome size={18} /> },
+      { name: "Forms", path: "/dashboard/forms", icon: <FiFile size={18} /> },
+      { name: "Products", path: "/dashboard/products", icon: <FiBox size={18} /> },
+      { name: "Categories", path: "/dashboard/categories", icon: <FiTag size={18} /> },
+      { name: "Orders", path: "/dashboard/orders", icon: <FiClipboard size={18} /> },
+      { name: "Settings", path: "/dashboard/settings", icon: <FiSettings size={18} /> },
+    ];
+  } 
+else if (role === "manager") {
+  
+    links = [
+      { name: "Dashboard", path: "/dashboard", icon: <FiHome size={18} /> },
+      { name: "Orders", path: "/dashboard/orders", icon: <FiClipboard size={18} /> },
+    ];
+  } else {
+
+    links = [
+      { name: "Dashboard", path: "/dashboard", icon: <FiHome size={18} /> },
+    ];
+  }
 
   return (
     <>
       <aside
         id="sidebar"
-        className="dashboard-sidebar fixed md:static inset-y-0 left-0 z-99 w-72 md:w-64 bg-black text-white border-r border-slate-200 shadow-md md:shadow-none transform -translate-x-full md:translate-x-0 transition-transform duration-300 "
+        className="dashboard-sidebar fixed md:static inset-y-0 left-0 z-99 w-72 md:w-64 bg-black text-white border-r border-slate-200 shadow-md md:shadow-none transform -translate-x-full md:translate-x-0 transition-transform duration-300"
         style={{ zIndex: "999999" }}
       >
         <div className="h-full flex flex-col">

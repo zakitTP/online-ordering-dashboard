@@ -37,7 +37,7 @@ const AddForm = () => {
     companyLogo: null,
     showName: "",
     facility: "",
-    room: "",
+    rooms: [], // Initialize as array with one empty room
     loadInDate: "",
     loadInTime: "",
     startDate: "",
@@ -79,7 +79,6 @@ const AddForm = () => {
       companyLogo: "Company Logo",
       showName: "Show Name",
       facility: "Facility",
-      room: "Room",
       loadInDate: "Load In Date",
       loadInTime: "Load In Time",
       startDate: "Start Date",
@@ -112,7 +111,6 @@ const AddForm = () => {
       "companyLogo",
       "showName",
       "facility",
-      "room",
       "loadInDate",
       "loadInTime",
       "startDate",
@@ -126,6 +124,13 @@ const AddForm = () => {
         toast.error(`Please fill ${formatFieldName(field)}`);
         return false;
       }
+    }
+
+    // Check if at least one room has value
+    const hasValidRooms = formData.rooms.some(room => room.trim() !== "");
+    if (!hasValidRooms) {
+      toast.error("Please enter at least one room");
+      return false;
     }
 
     if (formData.products.length === 0) {
@@ -158,12 +163,13 @@ const AddForm = () => {
         payload.append("company_logo", formData.companyLogo);
       }
 
+      // ✅ FIXED: Corrected comment - rooms are saved as array, not string
       payload.append(
         "event_info",
         JSON.stringify({
           showName: formData.showName,
           facility: formData.facility,
-          room: formData.room,
+          rooms: formData.rooms, // ✅ Save as array - "build,kio" will be one value
           loadInDate: formData.loadInDate,
           loadInTime: formData.loadInTime,
           startDate: formData.startDate,
@@ -405,42 +411,60 @@ const AddForm = () => {
       </form>
 
       {/* Modal */}
-      {modalVisible && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
-            {formData.status === "publish" && (
-              <>
-                <h2 className="text-2xl text-black font-bold mb-2">Access Code</h2>
-                <div className="flex justify-center gap-2 mb-4">
-                  <p className="break-words">{modalContent.accessCode}</p>
-                  <button
-                    onClick={() => handleCopy(modalContent.accessCode)}
-                    className="bg-black text-white px-2 py-1 rounded flex items-center gap-1"
-                  >
-                    <FaCopy /> Copy
-                  </button>
-                </div>
-              </>
-            )}
-            <h2 className="text-2xl text-black font-bold mb-2">Form URL</h2>
-            <div className="flex justify-center gap-2 mb-4">
-              <p className="break-words w-[85%]">{modalContent.formUrl}</p>
-              <button
-                onClick={() => handleCopy(modalContent.formUrl)}
-                className="bg-black text-white px-2 py-1 rounded flex items-center gap-1"
-              >
-                <FaCopy /> Copy
-              </button>
-            </div>
+{modalVisible && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center border border-gray-100 transition-all duration-300">
+      {/* Access Code Section (only if published) */}
+      {formData.status === "publish" && (
+        <>
+          <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
+            Access Code
+          </h2>
+          <div className="flex justify-center items-center gap-3 mb-6">
+            <span className="text-2xl font-bold text-black tracking-wider">
+              {modalContent.accessCode}
+            </span>
             <button
-              onClick={handleModalOk}
-              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
+              onClick={() => handleCopy(modalContent.accessCode)}
+              className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
             >
-              OK
+              <FaCopy className="text-sm" /> Copy
             </button>
           </div>
-        </div>
+          <div className="h-px bg-gray-200 mb-6"></div>
+        </>
       )}
+
+      {/* Form URL Section */}
+      <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
+        Form URL
+      </h2>
+      <div className="flex justify-center items-center gap-3 mb-8">
+        <div className="flex items-center justify-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 w-[80%] overflow-x-auto">
+          <p className="text-gray-700 text-sm break-words text-center">
+            {modalContent.formUrl}
+          </p>
+        </div>
+        <button
+          onClick={() => handleCopy(modalContent.formUrl)}
+          className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
+        >
+          <FaCopy className="text-sm" /> Copy
+        </button>
+      </div>
+
+      {/* OK Button */}
+      <button
+        onClick={handleModalOk}
+        className="w-full bg-[#C81A1F] hover:bg-[#a4161b] text-white font-semibold text-lg py-3 rounded-xl shadow-sm transition-all"
+      >
+        OK
+      </button>
+    </div>
+  </div>
+)}
+
+
     </section>
   );
 };

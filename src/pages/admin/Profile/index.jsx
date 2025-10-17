@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiUpload, FiX } from "react-icons/fi";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
-import { setUser } from "../../../lib/userSlice"; 
+import { setUser } from "../../../lib/userSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -14,7 +14,7 @@ export default function Profile() {
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
 
-  const  {user}  = useSelector((state) => state.user);
+  const { user } = useSelector((state) => state.user);
   const [formUser, setFormUser] = useState(user || {});
   const [imagePreview, setImagePreview] = useState(user?.image_url || null);
   const [loading, setLoading] = useState(false);
@@ -23,16 +23,16 @@ export default function Profile() {
     { name: "name", label: "Full Name", type: "text", required: true },
     { name: "email", label: "Email", type: "email", required: true },
     { name: "phone", label: "Phone", type: "text", required: true },
-    { name: "role", label: "Role", type: "select", options: ["admin", "manager", "user"], required: true },
+    { name: "role", label: "Role", type: "select", options: ["admin", "manager", "super admin"], required: true },
   ];
 
-  // ✅ Sync redux user into local state on mount/update
+  // ✅ Sync redux user into local state
   useEffect(() => {
     if (user) {
       setFormUser(user);
-     if (user?.image) {
-    setImagePreview(`${API_BASE_URL}/storage/${user.image}`);
-  }
+      if (user?.image) {
+        setImagePreview(`${API_BASE_URL}/storage/${user.image}`);
+      }
     }
   }, [user]);
 
@@ -64,14 +64,20 @@ export default function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    for (const field of fields) {
+    // Only validate editable fields for non-super-admins
+    const editableFields =
+      user?.role === "super admin"
+        ? fields
+        : fields.filter((f) => ["name"].includes(f.name));
+
+    for (const field of editableFields) {
       if (field.required && !formUser[field.name]) {
         return toast.error(`${field.label} is required!`);
       }
     }
 
     const formData = new FormData();
-    fields.forEach(f => formData.append(f.name, formUser[f.name]));
+    editableFields.forEach((f) => formData.append(f.name, formUser[f.name]));
     if (formUser.image instanceof File) formData.append("image", formUser.image);
 
     try {
@@ -83,7 +89,6 @@ export default function Profile() {
       );
 
       toast.success("Profile updated successfully!");
-
       dispatch(setUser(res.data));
     } catch (err) {
       const message = err.response?.data?.message || err.message || "Failed to update profile!";
@@ -93,14 +98,15 @@ export default function Profile() {
     }
   };
 
+  const isSuperAdmin = user?.role === "super admin";
+
   return (
     <div className="min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-8 shadow-sm max-w-4xl mx-auto">
-
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {fields.map(f => (
+            {fields.map((f) => (
               <div key={f.name}>
                 <label className="text-lg text-black font-medium">{f.label}</label>
                 {f.type === "select" ? (
@@ -108,10 +114,13 @@ export default function Profile() {
                     required={f.required}
                     value={formUser[f.name] || ""}
                     onChange={(e) => handleChange(f.name, e.target.value)}
-                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                    disabled={!isSuperAdmin && f.name !== "name"} // ✅ disable for non-super-admins except name
+                    className={`mt-1 w-full rounded border border-slate-300 px-3 py-2 ${
+                      !isSuperAdmin && f.name !== "name" ? "bg-gray-100 cursor-not-allowed" : ""
+                    }`}
                   >
                     <option value="">Select {f.label}</option>
-                    {f.options.map(opt => (
+                    {f.options.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt.charAt(0).toUpperCase() + opt.slice(1)}
                       </option>
@@ -123,7 +132,10 @@ export default function Profile() {
                     required={f.required}
                     value={formUser[f.name] || ""}
                     onChange={(e) => handleChange(f.name, e.target.value)}
-                    className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                    disabled={!isSuperAdmin && f.name !== "name"} // ✅ disable for non-super-admins except name
+                    className={`mt-1 w-full rounded border border-slate-300 px-3 py-2 ${
+                      !isSuperAdmin && f.name !== "name" ? "bg-gray-100 cursor-not-allowed" : ""
+                    }`}
                   />
                 )}
               </div>
@@ -141,6 +153,7 @@ export default function Profile() {
               className="hidden"
               accept="image/*"
               onChange={handleImageUpload}
+              disabled={loading}
             />
             {!imagePreview ? (
               <div
@@ -148,9 +161,7 @@ export default function Profile() {
                 onClick={triggerFileInput}
               >
                 <FiUpload className="mx-auto text-gray-400 text-2xl mb-2" />
-                <p className="text-sm text-gray-500">
-                  Click to upload or drag image (PNG/JPG/GIF)
-                </p>
+                <p className="text-sm text-gray-500">Click to upload or drag image (PNG/JPG/GIF)</p>
               </div>
             ) : (
               <div className="relative">

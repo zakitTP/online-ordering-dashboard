@@ -14,6 +14,7 @@ export default function CompanySettings({ onCancel }) {
     telephone: "",
     tollFree: "",
     siteUrl: "",
+    adminEmail:"",
   });
   const [logoPreview, setLogoPreview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +35,7 @@ export default function CompanySettings({ onCancel }) {
             telephone: res.data.telephone || "",
             tollFree: res.data.toll_free || "",
             siteUrl: res.data.site_url || "",
+            adminEmail:res.data.admin_email || "",
           });
           if (res.data.logo_url) setLogoPreview(res.data.logo_url);
         }
@@ -70,31 +72,46 @@ export default function CompanySettings({ onCancel }) {
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!settings.companyName) return toast.error("Company name is required!");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!settings.companyName) return toast.error("Company name is required!");
 
-    const formData = new FormData();
-    formData.append("company_name", settings.companyName);
-    if (settings.logo) formData.append("logo", settings.logo);
-    formData.append("address1", settings.address1);
-    formData.append("address2", settings.address2);
-    formData.append("telephone", settings.telephone);
-    formData.append("toll_free", settings.tollFree);
-    formData.append("site_url", settings.siteUrl);
+  // Split emails by comma and trim spaces
+  const emails = settings.adminEmail
+    .split(",")
+    .map((e) => e.trim())
+    .filter((e) => e !== "");
 
-    try {
-      setSaving(true);
-      await apiClient.post("/api/settings", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      toast.success("Settings saved successfully!");
-    } catch (err) {
-      toast.error("Failed to save settings!");
-    } finally {
-      setSaving(false);
-    }
-  };
+  // Optional: validate email format
+  const invalidEmails = emails.filter(
+    (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  );
+  if (invalidEmails.length > 0)
+    return toast.error(`Invalid email(s): ${invalidEmails.join(", ")}`);
+
+  const formData = new FormData();
+  formData.append("company_name", settings.companyName);
+  if (settings.logo) formData.append("logo", settings.logo);
+  formData.append("address1", settings.address1);
+  formData.append("address2", settings.address2);
+  formData.append("telephone", settings.telephone);
+  formData.append("toll_free", settings.tollFree);
+  formData.append("site_url", settings.siteUrl);
+  formData.append("admin_email", emails.join(",")); // ✅ save as comma-separated
+
+  try {
+    setSaving(true);
+    await apiClient.post("/api/settings", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    toast.success("Settings saved successfully!");
+  } catch (err) {
+    toast.error("Failed to save settings!");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   if (loading) {
     return (
@@ -217,6 +234,18 @@ export default function CompanySettings({ onCancel }) {
               placeholder="https://example.com"
             />
           </div>
+          {/* Admin Email */}
+        <div>
+  <label className="text-lg text-black font-medium">Admin Email(s)</label>
+  <input
+    type="text"
+    value={settings.adminEmail}
+    onChange={(e) => handleChange("adminEmail", e.target.value)}
+    className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+    placeholder="example1@gmail.com, example2@gmail.com"
+  />
+  <p className="text-xs text-slate-500 mt-1">Separate multiple emails with commas.</p>
+</div>
 
           {/* Actions */}
           <div className="pt-2 flex items-center gap-2">

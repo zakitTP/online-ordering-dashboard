@@ -20,7 +20,7 @@ export default function AddUser() {
       name: "role",
       label: "Role",
       type: "select",
-      options: ["admin", "manager", "user"],
+      options: ["super admin","admin", "manager"],
       required: true
     }
   ];

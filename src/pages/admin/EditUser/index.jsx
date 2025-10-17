@@ -18,7 +18,7 @@ export default function EditUser() {
     { name: "name", label: "Full Name", type: "text", required: true },
     { name: "email", label: "Email", type: "email", required: true },
     { name: "phone", label: "Phone", type: "text", required: true },
-    { name: "role", label: "Role", type: "select", options: ["admin", "manager", "user"], required: true },
+    { name: "role", label: "Role", type: "select", options: ["super admin","admin", "manager"], required: true },
   ];
 
   // 🔹 Load existing user data

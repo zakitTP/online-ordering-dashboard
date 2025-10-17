@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import apiClient from "../../../apiClient";
+import { useSelector } from "react-redux";
+
 import "react-toastify/dist/ReactToastify.css";
 import {
   FaPhone,
@@ -21,8 +23,10 @@ export default function ViewOrder() {
   const [refundLoading, setRefundLoading] = useState(false);
   const [showRefundPopup, setShowRefundPopup] = useState(false);
   const [refundType, setRefundType] = useState("full");
+  const [sendNotification, setSendNotification] = useState(true);
   const [refundAmount, setRefundAmount] = useState(0);
   const [refundNote, setRefundNote] = useState("");
+   const {user} = useSelector((state) => state.user)
   console.log(order);
   // Fetch order
   const fetchOrder = async () => {
@@ -72,6 +76,7 @@ export default function ViewOrder() {
         order_id: order.id,
         amount: parseFloat(refundAmount),
         note: refundNote,
+        notify_customer: sendNotification,
       });
 
       if (response.status === 200) {
@@ -151,7 +156,7 @@ export default function ViewOrder() {
   const combinedLabour = order_detail?.combinedLabour || 0;
   const subtotal = order_detail?.subtotal || 0;
   const consumablesTotal = order_detail?.consumablesTotal || 0;
-  const tax_breakdown = order_detail?.tax_breakdown || '';
+  const tax_breakdown = order_detail?.tax_breakdown || "";
   // Check if order is already refunded
   const isRefunded = status === "refunded";
 
@@ -187,24 +192,24 @@ export default function ViewOrder() {
             <p className="text-black mt-1">Order #{order.id}</p>
             <p className="text-black mt-1">{event_info.showName}</p>
           </div>
-          {status == 'completed' &&
-          <div className="mt-4 md:mt-0 flex space-x-3">
-            {!isRefunded && (
-              <button
-                onClick={() => setShowRefundPopup(true)}
-                disabled={refundLoading}
-                className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {refundLoading ? (
-                  <FaSpinner className="mr-2 animate-spin" />
-                ) : (
-                  <FaUndoAlt className="mr-2" />
-                )}
-                {refundLoading ? "Processing..." : "Process Refund"}
-              </button>
-            )}
-          </div>
-}
+          {user?.role !== "manager" && status == "completed" && (
+            <div className="mt-4 md:mt-0 flex space-x-3">
+              {!isRefunded && (
+                <button
+                  onClick={() => setShowRefundPopup(true)}
+                  disabled={refundLoading}
+                  className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {refundLoading ? (
+                    <FaSpinner className="mr-2 animate-spin" />
+                  ) : (
+                    <FaUndoAlt className="mr-2" />
+                  )}
+                  {refundLoading ? "Processing..." : "Process Refund"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Order Summary, Customer Info, Event Info */}
@@ -227,15 +232,15 @@ export default function ViewOrder() {
               </div>
               <div className="flex justify-between">
                 <span>Status:</span>
-                <span className={`capitalize font-medium status-badge status-${status}`}>
+                <span
+                  className={`capitalize font-medium status-badge status-${status}`}
+                >
                   {status}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Payment Method:</span>
-                <span className="font-medium">
-                  Card
-                </span>
+                <span className="font-medium">Card</span>
               </div>
               <div className="flex justify-between">
                 <span>Amount:</span>
@@ -243,14 +248,16 @@ export default function ViewOrder() {
               </div>
               <div className="flex justify-between">
                 <span>Transaction Id:</span>
-                <span className="font-medium">{order?.transaction_detail?.balance_transaction_id}</span>
+                <span className="font-medium">
+                  {order?.transaction_detail?.balance_transaction_id}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Ref Id:</span>
-                <span className="font-medium">{order?.transaction_detail?.charge_id}</span>
+                <span className="font-medium">
+                  {order?.transaction_detail?.charge_id}
+                </span>
               </div>
-
-              
             </div>
           </div>
 
@@ -316,55 +323,82 @@ export default function ViewOrder() {
           </div>
         </div>
 
-    {isRefunded &&
-        <div className="py-3">
-          <h3 className="text-2xl font-bold text-black mb-4">Refund Details</h3>
+        {isRefunded && (
+          <div className="py-3">
+            <h3 className="text-2xl font-bold text-black mb-4">
+              Refund Details
+            </h3>
 
-          {/* Stack vertically on small screens, row on md+; make cards fluid on mobile */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6 justify-start">
-     
-            {refund_detail?.amount && (
-  <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-60">
-    <label className="mb-2 text-lg font-medium text-black text-center">Refund Amount</label>
-    <div className="flex justify-center items-center gap-2 bg-green-50 text-green-800 px-4 py-2 rounded-lg border border-green-200 text-center">
-      <span className="font-semibold">{refund_detail.amount}</span>
-    </div>
-  </div>
-)}
+            {/* Stack vertically on small screens, row on md+; make cards fluid on mobile */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6 justify-start">
+              {refund_detail?.amount && (
+                <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-60">
+                  <label className="mb-2 text-lg font-medium text-black text-center">
+                    Refund Amount
+                  </label>
+                  <div className="flex justify-center items-center gap-2 bg-green-50 text-green-800 px-4 py-2 rounded-lg border border-green-200 text-center">
+                    <span className="font-semibold">
+                      {refund_detail.amount}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-{refund_detail?.created_at && (
-  <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-60">
-    <label className="mb-2 text-lg font-medium text-black text-center">Refund Date</label>
-    <div className="flex justify-center items-center gap-2 bg-blue-50 text-blue-800 px-4 py-2 rounded-lg border border-blue-200 text-center">
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-      <span className="font-medium">{new Date(refund_detail.created_at).toLocaleDateString()}</span>
-    </div>
-  </div>
-)}
+              {refund_detail?.created_at && (
+                <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-60">
+                  <label className="mb-2 text-lg font-medium text-black text-center">
+                    Refund Date
+                  </label>
+                  <div className="flex justify-center items-center gap-2 bg-blue-50 text-blue-800 px-4 py-2 rounded-lg border border-blue-200 text-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <span className="font-medium">
+                      {new Date(refund_detail.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-{refund_detail?.refund_id && (
-  <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-80">
-    <label className="mb-2 text-lg font-medium text-black text-center">Refund ID</label>
-    <div className="flex justify-center items-center gap-2 bg-yellow-50 text-yellow-800 px-4 py-2 rounded-lg border border-yellow-200 text-center">
-      <span className="font-medium break-all">{refund_detail.refund_id}</span>
-    </div>
-  </div>
-)}
+              {refund_detail?.refund_id && (
+                <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-80">
+                  <label className="mb-2 text-lg font-medium text-black text-center">
+                    Refund ID
+                  </label>
+                  <div className="flex justify-center items-center gap-2 bg-yellow-50 text-yellow-800 px-4 py-2 rounded-lg border border-yellow-200 text-center">
+                    <span className="font-medium break-all">
+                      {refund_detail.refund_id}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-{refund_detail?.note && (
-  <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-80">
-    <label className="mb-2 text-lg font-medium text-black text-center">Refund Note</label>
-    <div className="flex justify-center items-center gap-2 bg-yellow-50 text-yellow-800 px-4 py-2 rounded-lg border border-yellow-200 text-center">
-      <span className="font-medium break-all">{refund_detail.note}</span>
-    </div>
-  </div>
-)}
-
+              {refund_detail?.note && (
+                <div className="flex flex-col border border-gray-200 p-5 rounded-lg bg-white shadow-sm w-full md:w-80">
+                  <label className="mb-2 text-lg font-medium text-black text-center">
+                    Refund Note
+                  </label>
+                  <div className="flex justify-center items-center gap-2 bg-yellow-50 text-yellow-800 px-4 py-2 rounded-lg border border-yellow-200 text-center">
+                    <span className="font-medium break-all">
+                      {refund_detail.note}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-    }
+        )}
 
         {/* Order Items */}
         <div className="bg-white rounded-lg shadow-sm p-3 md:p-6 mb-6 border">
@@ -466,7 +500,7 @@ export default function ViewOrder() {
             </div>
 
             <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t">
-              <span>Total Payment</span>
+              <span>Total Payment (CAD)</span>
               <span>${total_amount}</span>
             </div>
           </div>
@@ -588,7 +622,8 @@ export default function ViewOrder() {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      defaultChecked
+                      checked={sendNotification}
+                      onChange={(e) => setSendNotification(e.target.checked)}
                       disabled={refundLoading}
                       className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded disabled:opacity-50"
                     />
