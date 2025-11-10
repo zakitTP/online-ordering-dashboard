@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import apiClient from "../../../apiClient";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export default function CompanySettings({ onCancel }) {
   const [settings, setSettings] = useState({
     companyName: "",
@@ -14,14 +15,23 @@ export default function CompanySettings({ onCancel }) {
     telephone: "",
     tollFree: "",
     siteUrl: "",
-    adminEmail:"",
+    adminEmail: "",
+    showBanner: false,
+    banner: null,
+    bannerUrl: "",
+    stripeTestMode: false,
   });
+
   const [logoPreview, setLogoPreview] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
   const fileInputRef = useRef(null);
+  const bannerFileInputRef = useRef(null);
   const navigate = useNavigate();
 
+  // Fetch settings
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -35,9 +45,16 @@ export default function CompanySettings({ onCancel }) {
             telephone: res.data.telephone || "",
             tollFree: res.data.toll_free || "",
             siteUrl: res.data.site_url || "",
-            adminEmail:res.data.admin_email || "",
+            adminEmail: res.data.admin_email || "",
+            banner: null,
+            bannerUrl:  res.data.banner_url || "",
+            showBanner: res.data.show_banner || false,
+            stripeTestMode: res.data.stripe_test_mode || false,
           });
+
           if (res.data.logo_url) setLogoPreview(res.data.logo_url);
+          if (res.data.banner_path)
+            setBannerPreview(`${API_BASE_URL}/storage/${res.data.banner_path}`);
         }
       } catch (err) {
         toast.error("Failed to load settings!");
@@ -57,9 +74,17 @@ export default function CompanySettings({ onCancel }) {
     if (!file) return;
     if (!file.type.match("image.*")) return toast.error("Select an image file!");
     if (file.size > 5 * 1024 * 1024) return toast.error("Max 5MB allowed!");
-
     setSettings({ ...settings, logo: file });
     setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleBannerUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.match("image.*")) return toast.error("Select an image file!");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Max 5MB allowed!");
+    setSettings({ ...settings, banner: file });
+    setBannerPreview(URL.createObjectURL(file));
   };
 
   const removeLogo = () => {
@@ -68,63 +93,67 @@ export default function CompanySettings({ onCancel }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
+  const removeBanner = () => {
+    setSettings({ ...settings, banner: null });
+    setBannerPreview(null);
+    if (bannerFileInputRef.current) bannerFileInputRef.current.value = "";
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!settings.companyName) return toast.error("Company name is required!");
+  const triggerFileInput = () => fileInputRef.current?.click();
+  const triggerBannerFileInput = () => bannerFileInputRef.current?.click();
 
-  // Split emails by comma and trim spaces
-  const emails = settings.adminEmail
-    .split(",")
-    .map((e) => e.trim())
-    .filter((e) => e !== "");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!settings.companyName) return toast.error("Company name is required!");
 
-  // Optional: validate email format
-  const invalidEmails = emails.filter(
-    (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  );
-  if (invalidEmails.length > 0)
-    return toast.error(`Invalid email(s): ${invalidEmails.join(", ")}`);
+    const emails = settings.adminEmail
+      .split(",")
+      .map((e) => e.trim())
+      .filter((e) => e !== "");
 
-  const formData = new FormData();
-  formData.append("company_name", settings.companyName);
-  if (settings.logo) formData.append("logo", settings.logo);
-  formData.append("address1", settings.address1);
-  formData.append("address2", settings.address2);
-  formData.append("telephone", settings.telephone);
-  formData.append("toll_free", settings.tollFree);
-  formData.append("site_url", settings.siteUrl);
-  formData.append("admin_email", emails.join(",")); // ✅ save as comma-separated
+    const invalidEmails = emails.filter(
+      (email) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    );
+    if (invalidEmails.length > 0)
+      return toast.error(`Invalid email(s): ${invalidEmails.join(", ")}`);
 
-  try {
-    setSaving(true);
-    await apiClient.post("/api/settings", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    toast.success("Settings saved successfully!");
-  } catch (err) {
-    toast.error("Failed to save settings!");
-  } finally {
-    setSaving(false);
-  }
-};
+    const formData = new FormData();
+    formData.append("company_name", settings.companyName);
+    if (settings.logo) formData.append("logo", settings.logo);
+    formData.append("address1", settings.address1);
+    formData.append("address2", settings.address2);
+    formData.append("telephone", settings.telephone);
+    formData.append("toll_free", settings.tollFree);
+    formData.append("site_url", settings.siteUrl);
+    formData.append("banner_url", settings.bannerUrl);
+    formData.append("admin_email", emails.join(","));
+    formData.append("show_banner", settings.showBanner ? "1" : "0");
+    formData.append("stripe_test_mode", settings.stripeTestMode ? "1" : "0");
+    if (settings.banner) formData.append("banner", settings.banner);
 
+    try {
+      setSaving(true);
+      await apiClient.post("/api/settings", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      toast.error("Failed to save settings!");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
-        <div className="flex items-center justify-center min-h-screen">
-
-       <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
-
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
       </div>
     );
   }
 
   return (
-    <div id="settings" className="view !mt-0 min-h-screen ">
+    <div id="settings" className="view !mt-0 min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="bg-white border border-slate-200 rounded p-3 md:p-6 shadow-sm max-w-3xl mx-auto">
         <h3 className="font-bold text-black text-3xl mb-2">Company Settings</h3>
@@ -175,7 +204,71 @@ const handleSubmit = async (e) => {
             <p className="text-xs text-slate-500 mt-1">PNG/JPG recommended.</p>
           </div>
 
-          {/* Address 1 */}
+          {/* Show Banner */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="showBanner"
+              checked={settings.showBanner}
+              onChange={(e) => handleChange("showBanner", e.target.checked)}
+              className="w-4 h-4 text-black border-slate-300 rounded focus:ring-black"
+            />
+            <label htmlFor="showBanner" className="text-lg text-black font-medium">
+              Show Banner
+            </label>
+          </div>
+
+          {/* Banner Image */}
+          {settings.showBanner && (
+            <div>
+              <label className="text-lg text-black font-medium">Banner Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={bannerFileInputRef}
+                onChange={handleBannerUpload}
+              />
+              {!bannerPreview ? (
+                <div
+                  className="border-2 border-dashed border-slate-300 p-6 text-center cursor-pointer hover:border-blue-400"
+                  onClick={triggerBannerFileInput}
+                >
+                  <FiUpload className="mx-auto text-gray-400 text-2xl mb-2" />
+                  <p className="text-sm text-gray-500">Click to upload banner image (PNG/JPG)</p>
+                </div>
+              ) : (
+                <div className="relative bg-[#cfcfcf] p-3 mt-1 rounded-lg">
+                  <img
+                    src={bannerPreview}
+                    alt="Banner Preview"
+                    className="h-48 w-full object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeBanner}
+                    className="absolute top-2 right-2 bg-red-500 p-1 rounded-full text-white hover:bg-red-600"
+                  >
+                    <FiX />
+                  </button>
+                </div>
+              )}
+              <p className="text-xs text-slate-500 mt-1">Banner will be displayed on your site. PNG/JPG recommended.</p>
+
+              <div>
+                <label className="text-lg text-black font-medium">Banner Url</label>
+                <input
+                  type="text"
+                  value={settings.bannerUrl}
+                  onChange={(e) => handleChange("bannerUrl", e.target.value)}
+                  className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+                  placeholder="www.example.com"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Address & Contact */}
           <div>
             <label className="text-lg text-black font-medium">Address</label>
             <input
@@ -187,7 +280,6 @@ const handleSubmit = async (e) => {
             />
           </div>
 
-          {/* Address 2 */}
           <div>
             <label className="text-lg text-black font-medium">Address 2</label>
             <input
@@ -198,7 +290,6 @@ const handleSubmit = async (e) => {
               placeholder="City, State, ZIP"
             />
           </div>
-
           {/* Telephone & Toll Free */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -234,22 +325,36 @@ const handleSubmit = async (e) => {
               placeholder="https://example.com"
             />
           </div>
+
           {/* Admin Email */}
-        <div>
-  <label className="text-lg text-black font-medium">Admin Email(s)</label>
-  <input
-    type="text"
-    value={settings.adminEmail}
-    onChange={(e) => handleChange("adminEmail", e.target.value)}
-    className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
-    placeholder="example1@gmail.com, example2@gmail.com"
-  />
-  <p className="text-xs text-slate-500 mt-1">Separate multiple emails with commas.</p>
-</div>
+          <div>
+            <label className="text-lg text-black font-medium">Admin Email(s)</label>
+            <input
+              type="text"
+              value={settings.adminEmail}
+              onChange={(e) => handleChange("adminEmail", e.target.value)}
+              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              placeholder="example1@gmail.com, example2@gmail.com"
+            />
+            <p className="text-xs text-slate-500 mt-1">Separate multiple emails with commas.</p>
+          </div>
+
+           {/* Stripe Test Mode */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="stripeTestMode"
+              checked={settings.stripeTestMode}
+              onChange={(e) => handleChange("stripeTestMode", e.target.checked)}
+              className="w-4 h-4 text-black border-slate-300 rounded focus:ring-black"
+            />
+            <label htmlFor="stripeTestMode" className="text-lg text-black font-medium">
+              Stripe Test Mode
+            </label>
+          </div>
 
           {/* Actions */}
           <div className="pt-2 flex items-center gap-2">
-
             <button
               type="submit"
               disabled={saving}

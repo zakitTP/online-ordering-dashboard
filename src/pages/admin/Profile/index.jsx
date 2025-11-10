@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUpload, FiX } from "react-icons/fi";
-import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { setUser } from "../../../lib/userSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import apiClient from "../../../apiClient"; // ✅ use shared axios instance
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -82,10 +82,12 @@ export default function Profile() {
 
     try {
       setLoading(true);
-      const res = await axios.post(
-        `${API_BASE_URL}/api/users/${formUser.id}?_method=PUT`,
+
+      // ✅ use apiClient instead of axios
+      const res = await apiClient.post(
+        `/api/users/${formUser.id}?_method=PUT`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       toast.success("Profile updated successfully!");

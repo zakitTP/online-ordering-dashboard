@@ -33,6 +33,7 @@ const AddForm = () => {
     contactName: "",
     contactEmail: "",
     contactPhone: "",
+    contactExt:"",
     companyName: "",
     companyLogo: null,
     showName: "",
@@ -157,6 +158,7 @@ const AddForm = () => {
       payload.append("contact_name", formData.contactName);
       payload.append("contact_email", formData.contactEmail);
       payload.append("contact_phone", formData.contactPhone);
+      payload.append("contact_ext", formData?.contactExt);
       payload.append("company_name", formData.companyName);
 
       if (formData.companyLogo instanceof File) {

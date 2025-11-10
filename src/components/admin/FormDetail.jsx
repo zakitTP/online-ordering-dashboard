@@ -55,20 +55,35 @@ const FormDetail = ({ formData, onInputChange }) => {
             className="mt-1 w-full rounded border border-slate-300 px-3 py-3"
             placeholder="name@email.com"
           />
+          <br></br>
+          <span>Separate multiple emails with commas.</span>
         </div>
         <div>
-          <label className="text-base lg:text-lg text-black font-medium">
-            Contact Phone
-          </label>
-          <input
-            inputMode="tel"
-            name="contactPhone"
-            value={formData.contactPhone}
-            onChange={onInputChange}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-3"
-            placeholder="+1 (555) 000-0000"
-          />
-        </div>
+  <label className="text-base lg:text-lg text-black font-medium">
+    Contact Phone
+  </label>
+  <div className="mt-1 flex gap-2">
+    {/* Phone Number */}
+    <input
+      inputMode="tel"
+      name="contactPhone"
+      value={formData.contactPhone}
+      onChange={onInputChange}
+      className="flex-1 rounded border border-slate-300 px-3 py-3"
+      placeholder="+1 (555) 000-0000"
+    />
+    {/* Extension */}
+    <input
+      inputMode="numeric"
+      name="contactExt"
+      value={formData.contactExt}
+      onChange={onInputChange}
+      className="w-24 rounded border border-slate-300 px-3 py-3"
+      placeholder="x266"
+    />
+  </div>
+</div>
+
       </div>
     </>
   );

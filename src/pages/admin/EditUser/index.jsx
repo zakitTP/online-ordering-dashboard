@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FiUpload, FiX } from "react-icons/fi";
-import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+import apiClient from "../../../apiClient"; // ✅ centralized axios instance
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function EditUser() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -18,16 +21,20 @@ export default function EditUser() {
     { name: "name", label: "Full Name", type: "text", required: true },
     { name: "email", label: "Email", type: "email", required: true },
     { name: "phone", label: "Phone", type: "text", required: true },
-    { name: "role", label: "Role", type: "select", options: ["super admin","admin", "manager"], required: true },
+    {
+      name: "role",
+      label: "Role",
+      type: "select",
+      options: ["super admin", "admin", "manager"],
+      required: true,
+    },
   ];
 
-  // 🔹 Load existing user data
+  // 🔹 Fetch existing user data
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/users/${id}`, {
-          withCredentials: true, 
-        });
+        const res = await apiClient.get(`/api/users/${id}`);
         setUser(res.data);
         if (res.data.image) {
           setImagePreview(`${API_BASE_URL}/storage/${res.data.image}`);
@@ -74,19 +81,22 @@ export default function EditUser() {
     }
 
     const formData = new FormData();
-    fields.forEach(f => formData.append(f.name, user[f.name]));
+    fields.forEach((f) => formData.append(f.name, user[f.name]));
     if (user.image instanceof File) formData.append("image", user.image);
 
     try {
       setLoading(true);
-      await axios.post(`${API_BASE_URL}/api/users/${id}?_method=PUT`, formData, {
+      await apiClient.post(`/api/users/${id}?_method=PUT`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true, 
       });
       toast.success("User updated successfully!");
       navigate("/dashboard/users");
     } catch (err) {
-      const message = err.response?.data?.message || err.response?.data || err.message || "Failed to update user!";
+      const message =
+        err.response?.data?.message ||
+        err.response?.data ||
+        err.message ||
+        "Failed to update user!";
       toast.error(message);
     } finally {
       setLoading(false);

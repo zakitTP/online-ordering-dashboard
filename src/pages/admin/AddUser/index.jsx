@@ -1,16 +1,16 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUpload, FiX, FiArrowLeft } from "react-icons/fi";
-import axios from "axios";
+import { FiUpload, FiX } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import apiClient from "../../../apiClient"; // ✅ use your axios instance
+
 export default function AddUser() {
   const [newUser, setNewUser] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate(); // ✅ hook to navigate
+  const navigate = useNavigate(); // ✅ navigation hook
 
   const fields = [
     { name: "name", label: "Full Name", type: "text", required: true },
@@ -20,9 +20,9 @@ export default function AddUser() {
       name: "role",
       label: "Role",
       type: "select",
-      options: ["super admin","admin", "manager"],
-      required: true
-    }
+      options: ["super admin", "admin", "manager"],
+      required: true,
+    },
   ];
 
   const handleChange = (field, value) => {
@@ -69,15 +69,17 @@ export default function AddUser() {
 
     try {
       setLoading(true);
-      await axios.post(`${API_BASE_URL}/api/users`, formData, {
+      await apiClient.post("/api/users", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
       });
       toast.success("User added successfully!");
       navigate("/dashboard/users"); // ✅ navigate after success
     } catch (err) {
       const message =
-        err.response?.data?.message || err.response?.data || err.message || "Failed to add user!";
+        err.response?.data?.message ||
+        err.response?.data ||
+        err.message ||
+        "Failed to add user!";
       toast.error(message);
     } finally {
       setLoading(false);

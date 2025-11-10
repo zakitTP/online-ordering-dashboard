@@ -64,56 +64,63 @@ const EventInfo = ({ formData, onInputChange, setFormData }) => {
   };
 
   // ✅ Auto-calculate rental days and validate date order
-  useEffect(() => {
-    const { loadInDate, loadInTime, startDate, startTime, finishDate, finishTime } = formData;
+useEffect(() => {
+  const { loadInDate, loadInTime, startDate, startTime, finishDate, finishTime } = formData;
 
-    const loadIn = loadInDate && loadInTime ? new Date(`${loadInDate}T${loadInTime}`) : null;
-    const start = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
-    const finish = finishDate && finishTime ? new Date(`${finishDate}T${finishTime}`) : null;
+  const loadIn = loadInDate && loadInTime ? new Date(`${loadInDate}T${loadInTime}`) : null;
+  const start = startDate && startTime ? new Date(`${startDate}T${startTime}`) : null;
+  const finish = finishDate && finishTime ? new Date(`${finishDate}T${finishTime}`) : null;
 
-    // Reset error before checking
-    setDateError("");
+  setDateError("");
 
-    // Start cannot be before load-in
-    if (start && loadIn && start < loadIn) {
-      setDateError("Start date/time cannot be before load-in date/time.");
-      setFormData((prev) => ({
-        ...prev,
-        startDate: "",
-        startTime: "",
-      }));
-      return;
-    }
+  // --- Validation still includes time ---
+  if (start && loadIn && start < loadIn) {
+    setDateError("Start date/time cannot be before load-in date/time.");
+    setFormData((prev) => ({
+      ...prev,
+      startDate: "",
+      startTime: "",
+    }));
+    return;
+  }
 
-    // Finish cannot be before start
-    if (finish && start && finish < start) {
-      setDateError("Finish date/time cannot be before start date/time.");
-      setFormData((prev) => ({
-        ...prev,
-        finishDate: "",
-        finishTime: "",
-      }));
-      return;
-    }
+  if (finish && start && finish < start) {
+    setDateError("Finish date/time cannot be before start date/time.");
+    setFormData((prev) => ({
+      ...prev,
+      finishDate: "",
+      finishTime: "",
+    }));
+    return;
+  }
 
-    // Auto-calculate rental days
-    if (start && finish && finish >= start) {
-      const diffMs = finish - start;
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      setFormData((prev) => ({
-        ...prev,
-        rentalDays: diffDays,
-      }));
-    }
-  }, [
-    formData.loadInDate,
-    formData.loadInTime,
-    formData.startDate,
-    formData.startTime,
-    formData.finishDate,
-    formData.finishTime,
-    setFormData,
-  ]);
+  // --- Rental days ignore time but count inclusively ---
+  if (startDate && finishDate) {
+    const startOnly = new Date(startDate);
+    const finishOnly = new Date(finishDate);
+
+    // Calculate date difference (ignore time)
+    const diffDays =
+      Math.floor((finishOnly - startOnly) / (1000 * 60 * 60 * 24)) + 1; // +1 = inclusive
+
+    const rentalDays = diffDays < 1 ? 1 : diffDays;
+
+    setFormData((prev) => ({
+      ...prev,
+      rentalDays,
+    }));
+  }
+}, [
+  formData.loadInDate,
+  formData.loadInTime,
+  formData.startDate,
+  formData.startTime,
+  formData.finishDate,
+  formData.finishTime,
+  setFormData,
+]);
+
+
 
   // Initialize rooms array if not present
   useEffect(() => {
@@ -202,14 +209,14 @@ const EventInfo = ({ formData, onInputChange, setFormData }) => {
         <div className="md:col-span-2">
           <div className="flex justify-between items-center mb-2">
             <label className="text-base lg:text-lg text-black font-medium">
-              Venue Address
+              Location/Building/Room
             </label>
             <button
               type="button"
               onClick={addRoom}
               className="px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
             >
-              + Add Room
+              + Add
             </button>
           </div>
           

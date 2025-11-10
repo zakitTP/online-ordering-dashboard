@@ -35,6 +35,7 @@ const EditForm = () => {
     contactName: "",
     contactEmail: "",
     contactPhone: "",
+    contactExt: "",
     companyName: "",
     companyLogo: null,
     showName: "",
@@ -58,6 +59,10 @@ const EditForm = () => {
     accessCode: "",
     formUrl: "",
   });
+
+  console.log(formData)
+
+
 
   // Fetch existing form
   useEffect(() => {
@@ -100,6 +105,7 @@ const EditForm = () => {
           contactName: data.contact_name,
           contactEmail: data.contact_email,
           contactPhone: data.contact_phone,
+          contactExt: data.contact_ext,
           companyName: data.company_name,
           companyLogo: data.company_logo,
           companyLogoUrl: data.company_logo_url,
@@ -215,6 +221,7 @@ const EditForm = () => {
       payload.append("contact_name", formData.contactName);
       payload.append("contact_email", formData.contactEmail);
       payload.append("contact_phone", formData.contactPhone);
+    payload.append("contact_ext", formData.contactExt ?? "");
       payload.append("company_name", formData.companyName);
 
       if (formData.companyLogo instanceof File) {

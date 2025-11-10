@@ -11,6 +11,7 @@ export default function ProductList() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false); // Loader state
   const [deleteId, setDeleteId] = useState(null); // ID for deletion
   const [deleteLoading, setDeleteLoading] = useState(false); // Loader for delete modal
@@ -29,6 +30,7 @@ export default function ProductList() {
       const res = await apiClient.get("/api/products", { params });
       setProducts(res.data.data);
       setTotalPages(res.data.last_page);
+      setTotalItems(res.data.total || 0);
     } catch (err) {
       console.error("Failed to fetch products:", err);
     } finally {
@@ -175,9 +177,10 @@ export default function ProductList() {
                       </td>
                       <td className="px-3 py-2 font-medium" data-label="Product">{p.title}</td>
                       <td className="px-3 py-2" data-label="Category">
+                        {p?.category &&
                         <span className="inline-flex  justify-center border border-[#bbb]  px-4 py-0.5 rounded-full bg-[#dcdcdc] category-card-title text-sm">
-                          {p.category?.name}
-                        </span>
+                          {p?.category?.name}
+                        </span> }
                       </td>
                       <td className="px-3 py-2 text-right" data-label="Prepaid Price">${p.prepaid_price}</td>
                       <td className="px-3 py-2 text-right" data-label="Prepaid Price">${p.standard_price}</td>
@@ -205,37 +208,64 @@ export default function ProductList() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4 text-base ">
-              <button
-                onClick={() => setPage(1)}
-                disabled={page === 1}
-                className="md:px-3 px-2 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-              >
-                Reset Filters
-              </button>
-              <div className="flex items-center gap-3 pl-1">
-                <p className="text-slate-600">
-                  {Math.min((page - 1) * perPage + 1, products.length)}–{Math.min(page * perPage, totalPages * perPage)} of {totalPages * perPage}
-                </p>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    <FiChevronLeft />
-                  </button>
-                  <span className="px-3 py-1 rounded-lg border bg-brand-600 text-white border-brand-600">{page}</span>
-                  <button
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === totalPages}
-                    className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    <FiChevronRight />
-                  </button>
-                </div>
-              </div>
-            </div>
+           {/* Pagination */}
+{products.length > 0 && (
+  <div className="flex flex-col sm:flex-row items-center justify-between mt-6 text-base gap-3">
+    {/* Results Info */}
+    <p className="text-slate-600">
+      Showing{" "}
+      {products.length
+        ? `${(page - 1) * perPage + 1}–${Math.min(page * perPage, totalItems)}`
+        : "0"}{" "}
+      of {totalItems} results
+    </p>
+
+    {/* Pagination Controls */}
+    <div className="flex items-center gap-1">
+      {/* Prev Button */}
+      <button
+        onClick={() => setPage(page - 1)}
+        disabled={page === 1}
+        className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+      >
+        <FiChevronLeft />
+      </button>
+
+      {/* Dynamic Page Numbers (max 5 visible) */}
+      {Array.from({ length: totalPages })
+        .map((_, i) => i + 1)
+        .filter((p) => {
+          if (totalPages <= 5) return true;
+          if (page <= 3) return p <= 5;
+          if (page >= totalPages - 2) return p >= totalPages - 4;
+          return p >= page - 2 && p <= page + 2;
+        })
+        .map((p) => (
+          <button
+            key={p}
+            onClick={() => setPage(p)}
+            className={`px-3 py-1.5 rounded-lg border transition-all duration-150 ${
+              p === page
+                ? "bg-brand-600 text-white border-brand-600 shadow-sm"
+                : "border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+
+      {/* Next Button */}
+      <button
+        onClick={() => setPage(page + 1)}
+        disabled={page === totalPages}
+        className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+      >
+        <FiChevronRight />
+      </button>
+    </div>
+  </div>
+)}
+
           </>
         )}
       </div>

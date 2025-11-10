@@ -102,6 +102,7 @@ const Invoice = forwardRef(({ order }, ref) => {
     contact_name = "N/A",
     contact_email = "N/A",
     contact_phone = "N/A",
+    contact_ext = '',
     is_prepaid = false,
     rental_days = 3,
     company_name = "N/A",
@@ -467,9 +468,9 @@ const Invoice = forwardRef(({ order }, ref) => {
 
                       <div className="info-right">
                         <div className="block-title">Contact Details</div>
-                                  {rooms.length > 0 && (
+                              {rooms.length > 0 && (
               rooms.map((room, index) => (
-                 <div className="flex gap-2 company-info-details"><span className="font-semibold w-48">{room?.label} – Booth # :</span><span>{room?.value}</span></div> 
+                 <div className="flex gap-2 company-info-details"><span className="font-semibold w-100">{room?.label} – Booth # : {room?.value}</span></div> 
               )))}
 
                         <div className="mt-2 pb-4 md:pb-0">
@@ -493,7 +494,7 @@ const Invoice = forwardRef(({ order }, ref) => {
                           <p style={{margin: '0 0 12px'}}>Quick support for all your needs.</p>
                           <div className="help-item mt-6">
                             <FaPhone className="text-red-600" />
-                           <span className="-mt-4">{contact_phone}</span>
+                           <span className="-mt-4">{contact_phone} {contact_ext && contact_ext != 'null' ? `(ext. ${contact_ext})` : ""}</span>
                           </div>
                           <div className="help-item mt-4">
                             <FaEnvelope className="text-red-600" />
@@ -521,10 +522,7 @@ const Invoice = forwardRef(({ order }, ref) => {
                             <p className="text-xl font-semibold text-black">Facility</p>
                             <p className="text-[16px] text-black">{facility}</p>
                           </div>
-                          <div>
-                            <p className="text-xl font-semibold text-black">Room</p>
-                            <p className="text-[16px] text-black">{room}</p>
-                          </div>
+                      
                         </div>
                       </div>
 

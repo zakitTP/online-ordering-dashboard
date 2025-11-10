@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { FiSearch, FiChevronLeft, FiChevronRight, FiUserPlus, FiTrash2, FiEdit } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useSelector } from "react-redux";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import apiClient from "../../../apiClient"; // ✅ use your apiClient
+
 export default function UserList() {
-  const {user} = useSelector((state) => state.user)
+  const { user } = useSelector((state) => state.user);
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
@@ -18,6 +18,7 @@ export default function UserList() {
   const [deleting, setDeleting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [totalItems, setTotalItems] = useState(0);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -29,12 +30,11 @@ export default function UserList() {
     };
 
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/users`, {
-        params,
-        withCredentials: true,
-      });
+      const res = await apiClient.get("/api/users", { params });
+      console.log(res.data)
       setUsers(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
+      setTotalItems(res.data.total || 0);
     } catch (err) {
       toast.error("Failed to fetch users");
       console.error(err);
@@ -56,9 +56,7 @@ export default function UserList() {
     if (!selectedUser) return;
     setDeleting(true);
     try {
-      await axios.delete(`${API_BASE_URL}/api/users/${selectedUser.id}`, {
-        withCredentials: true,
-      });
+      await apiClient.delete(`/api/users/${selectedUser.id}`);
       toast.success("User deleted successfully!");
       fetchUsers();
       setShowModal(false);
@@ -166,28 +164,63 @@ export default function UserList() {
 }   
 
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-4 text-base">
-          <p className="text-slate-600">
-            Showing {users.length ? (page - 1) * perPage + 1 : 0}–{Math.min(page * perPage, users.length)} of {users.length}
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <FiChevronLeft />
-            </button>
-            <span className="px-2.5 py-1 rounded-lg border bg-brand-600 text-white border-brand-600">{page}</span>
-            <button
-              onClick={() => setPage(page + 1)}
-              disabled={page === totalPages}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <FiChevronRight />
-            </button>
-          </div>
-        </div>
+      {/* Pagination */}
+{users.length > 0 && (
+  <div className="flex flex-col sm:flex-row items-center justify-between mt-6 text-base gap-3">
+    {/* Results Info */}
+    <p className="text-slate-600">
+      Showing{" "}
+      {users.length
+        ? `${(page - 1) * perPage + 1}–${Math.min(page * perPage, totalItems || 0)}`
+        : "0"}{" "}
+      of {totalItems || 0} results
+    </p>
+
+    {/* Pagination Buttons */}
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => setPage(page - 1)}
+        disabled={page === 1}
+        className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+      >
+        <FiChevronLeft />
+      </button>
+
+      {/* Dynamic page buttons */}
+      {Array.from({ length: totalPages })
+        .map((_, i) => i + 1)
+        .filter((p) => {
+          // show 5 pages max, centered around current page
+          if (totalPages <= 5) return true;
+          if (page <= 3) return p <= 5;
+          if (page >= totalPages - 2) return p >= totalPages - 4;
+          return p >= page - 2 && p <= page + 2;
+        })
+        .map((p) => (
+          <button
+            key={p}
+            onClick={() => setPage(p)}
+            className={`px-3 py-1.5 rounded-lg border ${
+              p === page
+                ? "bg-brand-600 text-white border-brand-600"
+                : "border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+
+      <button
+        onClick={() => setPage(page + 1)}
+        disabled={page === totalPages}
+        className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+      >
+        <FiChevronRight />
+      </button>
+    </div>
+  </div>
+)}
+
       </div>
 
       {/* Delete Confirmation Modal */}

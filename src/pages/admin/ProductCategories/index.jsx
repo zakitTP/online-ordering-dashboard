@@ -3,9 +3,12 @@ import { FiTrash2, FiPlus, FiEdit } from "react-icons/fi";
 import apiClient from "../../../apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useDispatch,useSelector } from "react-redux";
+import { setCategories } from "../../../lib/categoriesSlice";
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState([]);
+  const dispatch = useDispatch();
+const categories = useSelector((state) => state.categories.items);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -22,7 +25,7 @@ export default function CategoriesPage() {
     try {
       setLoading(true);
       const res = await apiClient.get("api/categories");
-      setCategories(res.data);
+      dispatch(setCategories(res.data))
     } catch (err) {
       toast.error("Failed to fetch categories");
     } finally {
@@ -30,9 +33,6 @@ export default function CategoriesPage() {
     }
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   // Add category
   const handleAddCategory = async () => {
@@ -250,7 +250,7 @@ export default function CategoriesPage() {
               </button>
               <button
                 onClick={handleDeleteCategory}
-                className="px-3 md:px-5 py-3 rounded bg-black text-white text-xl w-32 text-center"
+                className="px-3 md:px-5 py-3 rounded bg-black text-white text-xl flex items-center gap-2"
                 disabled={actionLoading}
               >
                 {actionLoading && (

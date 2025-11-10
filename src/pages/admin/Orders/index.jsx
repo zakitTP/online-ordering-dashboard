@@ -1,7 +1,14 @@
-import { useEffect, useState,useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiEye, FiTrash2, FiSearch,FiChevronLeft,FiChevronRight, FiDownload } from "react-icons/fi";
+import {
+  FiEye,
+  FiTrash2,
+  FiSearch,
+  FiChevronLeft,
+  FiChevronRight,
+  FiDownload,
+} from "react-icons/fi";
 import apiClient from "../../../apiClient";
 import { Link } from "react-router-dom";
 import Invoice from "../Invoice";
@@ -13,24 +20,26 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [perPage, setPerPage] = useState(10);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [invoiceOrder, setInvoiceOrder] = useState({});
-    const {user} = useSelector((state) => state.user)
+  const { user } = useSelector((state) => state.user);
 
   // Delete modal
   const [deleteId, setDeleteId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-useEffect(() => {
-  if (invoiceOrder && Object.keys(invoiceOrder).length > 0) {
-    // Wait a tiny bit to ensure Invoice renders
-    const timer = setTimeout(() => {
-      invoiceRef.current?.generatePDF();
-    }, 300);
+  useEffect(() => {
+    if (invoiceOrder && Object.keys(invoiceOrder).length > 0) {
+      // Wait a tiny bit to ensure Invoice renders
+      const timer = setTimeout(() => {
+        invoiceRef.current?.generatePDF();
+      }, 300);
 
-    return () => clearTimeout(timer);
-  }
-}, [invoiceOrder]);
+      return () => clearTimeout(timer);
+    }
+  }, [invoiceOrder]);
   // Fetch orders with filters and pagination
   const fetchOrders = async () => {
     try {
@@ -38,9 +47,10 @@ useEffect(() => {
       const res = await apiClient.get("/api/orders", {
         params: { page, search, status },
       });
-     setOrders(res.data.data || []);
-      setTotalPages(res.data.last_page);
-
+      setOrders(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalItems(res.data.total || 0);
+      setPerPage(res.data.per_page || 10);
     } catch (err) {
       toast.error("Failed to fetch orders");
     } finally {
@@ -69,9 +79,9 @@ useEffect(() => {
     fetchOrders();
   }, [page, search, status]);
 
-const handleInvoice = (order) => {
-  setInvoiceOrder({ ...order });
-}
+  const handleInvoice = (order) => {
+    setInvoiceOrder({ ...order });
+  };
   return (
     <div id="orders" className="view !mt-0">
       <ToastContainer />
@@ -81,7 +91,7 @@ const handleInvoice = (order) => {
         </div>
 
         {/* Filters */}
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 mb-4">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-2 mb-4">
           <div className="flex items-center gap-2 px-3 py-2 rounded border border-slate-300">
             <FiSearch className="text-slate-500" />
             <input
@@ -90,7 +100,7 @@ const handleInvoice = (order) => {
                 setSearch(e.target.value);
                 setPage(1); // reset to page 1 when searching
               }}
-              placeholder="Search with Campany Name, Order ID"
+              placeholder="Search with Company Name, Order ID"
               className="w-full outline-none text-lg"
             />
           </div>
@@ -100,7 +110,7 @@ const handleInvoice = (order) => {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="w-full px-3 py-2 rounded text-lg border border-slate-300"
+            className="w-1/2 px-3 py-2 rounded text-lg border border-slate-300"
           >
             <option>All</option>
             <option>Pending</option>
@@ -123,57 +133,83 @@ const handleInvoice = (order) => {
               <table className="min-w-full text-sm db-back-table responsive">
                 <thead>
                   <tr>
-                    <th className="text-left font-medium px-3 py-2">Order ID</th>
-                    <th className="text-left font-medium px-3 py-2">Form Title</th>
-                    <th className="text-left font-medium px-3 py-2">Company Name</th>
+                    <th className="text-left font-medium px-3 py-2">
+                      Order ID
+                    </th>
+                    <th className="text-left font-medium px-3 py-2">
+                      Form Title
+                    </th>
+                    <th className="text-left font-medium px-3 py-2">
+                      Company Name
+                    </th>
                     <th className="text-left font-medium px-3 py-2">Total</th>
                     <th className="text-left font-medium px-3 py-2">Status</th>
                     <th className="text-left font-medium px-3 py-2">Date</th>
-                    <th className="text-center font-medium px-3 py-2">Actions</th>
+                    <th className="text-center font-medium px-3 py-2">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="main-card-box-row">
                   {orders.map((order) => (
                     <tr key={order.id} className="border-t">
-                      <td className="px-3 py-2 font-medium" data-label="Order ID">#{order.id}</td>
-                      <td className="px-3 py-2" data-label="Form Title">{order?.form?.form_title} (ID:#{order?.form?.id})</td>
-                      <td className="px-3 py-2" data-label="Company Name">{order?.form?.company_name}</td>
-                      <td className="px-3 py-2 text-left" data-label="Total">${order.total_amount}</td>
+                      <td
+                        className="px-3 py-2 font-medium"
+                        data-label="Order ID"
+                      >
+                        #{order.id}
+                      </td>
+                      <td className="px-3 py-2" data-label="Form Title">
+                        {order?.form?.form_title} (ID:#{order?.form?.id})
+                      </td>
+                      <td className="px-3 py-2" data-label="Company Name">
+                        {order?.form?.company_name}
+                      </td>
+                      <td className="px-3 py-2 text-left" data-label="Total">
+                        ${order.total_amount}
+                      </td>
                       <td className="px-3 py-2" data-label="Status">
-                       
-  {(() => {
-    let colorClasses = "border-gray-400 bg-gray-200 text-gray-800"; // default
+                        {(() => {
+                          let colorClasses =
+                            "border-gray-400 bg-gray-200 text-gray-800"; // default
 
-    switch (order.status?.toLowerCase()) {
-      case "completed":
-        colorClasses = "border-green-600 bg-green-100 text-green-700";
-        break;
-      case "failed":
-        colorClasses = "border-red-600 bg-red-100 text-red-700";
-        break;
-      case "refunded":
-        colorClasses = "border-orange-500 bg-orange-100 text-orange-700";
-        break;
-      case "pending":
-        colorClasses = "border-yellow-500 bg-yellow-100 text-yellow-700";
-        break;
-    }
+                          switch (order.status?.toLowerCase()) {
+                            case "completed":
+                              colorClasses =
+                                "border-green-600 bg-green-100 text-green-700";
+                              break;
+                            case "failed":
+                              colorClasses =
+                                "border-red-600 bg-red-100 text-red-700";
+                              break;
+                            case "refunded":
+                              colorClasses =
+                                "border-orange-500 bg-orange-100 text-orange-700";
+                              break;
+                            case "pending":
+                              colorClasses =
+                                "border-yellow-500 bg-yellow-100 text-yellow-700";
+                              break;
+                          }
 
-    return (
-      <span
-        className={`inline-flex max-w-fit px-3 py-0.5 rounded-full border capitalize text-sm font-medium ${colorClasses}`}
-      style={{ maxWidth: "fit-content" }}>
-        {order.status}
-      </span>
-    );
-  })()}
-</td>
+                          return (
+                            <span
+                              className={`inline-flex max-w-fit px-3 py-0.5 rounded-full border capitalize text-sm font-medium ${colorClasses}`}
+                              style={{ maxWidth: "fit-content" }}
+                            >
+                              {order.status}
+                            </span>
+                          );
+                        })()}
+                      </td>
 
-                     
                       <td className="px-3 py-2" data-label="Date">
                         {new Date(order.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-3 py-2 text-center" data-label="Actions">
+                      <td
+                        className="px-3 py-2 text-center"
+                        data-label="Actions"
+                      >
                         <div className="flex xl:justify-center justify-start gap-2">
                           <Link
                             to={`/dashboard/orders/${order.id}`}
@@ -181,14 +217,14 @@ const handleInvoice = (order) => {
                           >
                             <FiEye />
                           </Link>
-                          {user?.role !== "manager" &&
-                          <button
-                            onClick={() => setDeleteId(order.id)}
-                            className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
-                          >
-                            <FiTrash2 />
-                          </button>
-                            }
+                          {user?.role !== "manager" && (
+                            <button
+                              onClick={() => setDeleteId(order.id)}
+                              className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
+                            >
+                              <FiTrash2 />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleInvoice(order)}
                             className="px-2 py-1 rounded bg-red-600 text-white text-sm flex items-center gap-1"
@@ -201,40 +237,66 @@ const handleInvoice = (order) => {
                   ))}
                 </tbody>
               </table>
-                     <div style={{ display: "none" }}>
-          <Invoice
-    ref={invoiceRef}
-    order={invoiceOrder}
-  />
-      </div>
+              <div style={{ display: "none" }}>
+                <Invoice ref={invoiceRef} order={invoiceOrder} />
+              </div>
               {/* Pagination */}
               {/* Improved Pagination */}
-<div className="flex items-center justify-between gap-3 mt-6">
-  <p className="text-slate-600">
-    {Math.min((page - 1) * orders.length + 1, orders.length)}–
-    {Math.min(page * orders.length, totalPages * orders.length)} of{" "}
-    {totalPages * orders.length}
-  </p>
-  <div className="flex items-center gap-1">
-    <button
-      onClick={() => setPage((p) => Math.max(1, p - 1))}
-      disabled={page === 1}
-      className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-    >
-      <FiChevronLeft />
-    </button>
-    <span className="px-3 py-1 rounded-lg border bg-brand-600 text-white border-brand-600">
-      {page}
-    </span>
-    <button
-      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-      disabled={page === totalPages}
-      className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-    >
-      <FiChevronRight />
-    </button>
+            {/* Pagination */}
+{orders.length > 0 && (
+  <div className="flex flex-col sm:flex-row items-center justify-between mt-6 text-base gap-3">
+    {/* Results Info */}
+    <p className="text-slate-600">
+      Showing{" "}
+      {orders.length
+        ? `${(page - 1) * perPage + 1}–${Math.min(page * perPage, totalItems)}`
+        : "0"}{" "}
+      of {totalItems} results
+    </p>
+
+    {/* Pagination Buttons */}
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => setPage(page - 1)}
+        disabled={page === 1}
+        className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+      >
+        <FiChevronLeft />
+      </button>
+
+      {/* Dynamic numbered pages (max 5) */}
+      {Array.from({ length: totalPages })
+        .map((_, i) => i + 1)
+        .filter((p) => {
+          if (totalPages <= 5) return true;
+          if (page <= 3) return p <= 5;
+          if (page >= totalPages - 2) return p >= totalPages - 4;
+          return p >= page - 2 && p <= page + 2;
+        })
+        .map((p) => (
+          <button
+            key={p}
+            onClick={() => setPage(p)}
+            className={`px-3 py-1.5 rounded-lg border ${
+              p === page
+                ? "bg-brand-600 text-white border-brand-600"
+                : "border-slate-300 hover:bg-slate-50"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+
+      <button
+        onClick={() => setPage(page + 1)}
+        disabled={page === totalPages}
+        className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+      >
+        <FiChevronRight />
+      </button>
+    </div>
   </div>
-</div>
+)}
 
             </>
           )}
@@ -270,6 +332,5 @@ const handleInvoice = (order) => {
         </div>
       )}
     </div>
-
   );
 }

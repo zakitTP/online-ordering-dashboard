@@ -16,6 +16,17 @@ import {
   FaIdCard,
 } from "react-icons/fa";
 
+const formatCurrency = (val) => {
+  // Convert to number safely
+  const num = parseFloat(val);
+
+  // If not a valid number, return 0.00
+  if (isNaN(num)) return "0.00";
+
+  // Always return fixed 2 decimal places
+  return num.toFixed(2);
+};
+
 export default function ViewOrder() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
@@ -26,7 +37,7 @@ export default function ViewOrder() {
   const [sendNotification, setSendNotification] = useState(true);
   const [refundAmount, setRefundAmount] = useState(0);
   const [refundNote, setRefundNote] = useState("");
-   const {user} = useSelector((state) => state.user)
+  const { user } = useSelector((state) => state.user);
   console.log(order);
   // Fetch order
   const fetchOrder = async () => {
@@ -141,7 +152,10 @@ export default function ViewOrder() {
   const clientData = order_detail?.clientData || {};
   const products = formData?.products || [];
   const event_info = formData?.event_info || {};
+  const rental_days = formData?.rental_days || 1;
+  const is_prepaid = formData?.is_prepaid;
   const companyInfo = clientData?.companyInfo || {};
+  const rooms = companyInfo?.rooms || [];
   const status = order?.status || "N/A";
   const total_amount = order?.total_amount || 0;
   const refund_detail = order?.refund_detail?.[0] || {};
@@ -246,12 +260,16 @@ export default function ViewOrder() {
                 <span>Amount:</span>
                 <span className="font-medium">${total_amount}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Transaction Id:</span>
-                <span className="font-medium">
-                  {order?.transaction_detail?.balance_transaction_id}
-                </span>
-              </div>
+              {order?.transaction_detail?.balance_transaction_id && (
+                <div className="flex justify-between">
+                  <span>
+                    Transaction Id:
+                    <span className="font-medium">
+                      {order?.transaction_detail?.balance_transaction_id}
+                    </span>
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Ref Id:</span>
                 <span className="font-medium">
@@ -303,11 +321,14 @@ export default function ViewOrder() {
                 <p className="text-lg font-medium">{event_info.showName}</p>
                 <p className="text-black">{event_info.facility}</p>
               </div>
-              <div>
-                <p className="text-black">
-                  <span className="font-medium">Room:</span> {event_info.room}
-                </p>
-              </div>
+              {rooms.length > 0 &&
+                rooms.map((room, index) => (
+                  <div className="flex gap-2 company-info-details">
+                    <span className="font-semibold w-100">
+                      {room?.label} – Booth # : {room?.value}
+                    </span>
+                  </div>
+                ))}
               <div className="pt-2">
                 <p className="text-black">
                   <span className="font-medium">Load In:</span>{" "}
@@ -417,7 +438,10 @@ export default function ViewOrder() {
                     Qty
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
-                    Price
+                    Rate
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
+                    Days
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">
                     Total
@@ -425,85 +449,128 @@ export default function ViewOrder() {
                 </tr>
               </thead>
               <tbody className="bg-white main-card-box-row">
-                {products.map((p) => (
-                  <tr key={p.id}>
-                    <td className="px-4 py-3 font-semibold" data-label="Item">
-                      <p>
-                        {p.title}
-                        {p.labour_price > 0 && (
-                          <span className="text-[12px] md:text-[14px] text-slate-500">
-                            (*Extra labour req'd per day) ({p.labour_price})
-                          </span>
-                        )}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3" data-label="Category">
-                      {p.category_name}
-                    </td>
-                    <td className="px-4 py-3" data-label="Qty">
-                      {quantities[p.id] || 1}
-                    </td>
-                    <td className="px-4 py-3" data-label="Price">
-                      ${p.prepaid_price}
-                    </td>
-                    <td className="px-4 py-3" data-label="Total">
-                      ${(p.prepaid_price * (quantities[p.id] || 1)).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                {products.map((p) => {
+                  if (quantities[p.id] === 0 || quantities[p.id] === undefined)
+                    return null;
+
+                  const rate =
+                    parseFloat(
+                      is_prepaid ? p.prepaid_price : p.standard_price
+                    ) || 0;
+                  console.log(is_prepaid);
+                  const days = rental_days || 1;
+                  const total = rate * (quantities[p.id] || 1) * days;
+                  return (
+                    <tr key={p.id}>
+                      <td className="px-4 py-3 font-semibold" data-label="Item">
+                        <p>
+                          {p.title}
+                          {p.labour_price > 0 && (
+                            <span className="text-[12px] md:text-[14px] text-slate-500">
+                              (*Extra labour req'd per day) ({p.labour_price})
+                            </span>
+                          )}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3" data-label="Category">
+                        {p.category_name}
+                      </td>
+                      <td className="px-4 py-3" data-label="Qty">
+                        {quantities[p.id] || 1}
+                      </td>
+                      <td className="px-4 py-3" data-label="Price">
+                        ${p.prepaid_price}
+                      </td>
+                      <td className="px-4 py-3" data-label="Days">
+                        {rental_days}
+                      </td>
+                      <td className="px-4 py-3" data-label="Total">
+                        ${total.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Totals */}
-          <div className="mt-4 pt-4 border-t space-y-2">
-            <div className="flex justify-between">
-              <span className="text-black font-medium">Equipment Total</span>
-              <span>${equipmentTotal}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black font-medium">Labour Charge</span>
-              <span>${labourCharge}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black font-medium">
-                Additional Large Monitor / Kiosk / Wall Mount + Screen Labour
-              </span>
-              <span>${combinedLabour}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black font-medium">Insurance</span>
-              <span>${insurance}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black font-medium">Consumables</span>
-              <span>${consumablesTotal}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black font-medium">Admin Fees</span>
-              <span>${adminFees}</span>
-            </div>
+         <div className="mt-4 pt-4 border-t space-y-2">
 
-            <div className="flex justify-between">
-              <span className="text-black font-medium">Delivery/Pickup</span>
-              <span>${deliveryPickup}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black font-medium">Subtotal</span>
-              <span>${subtotal}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-black font-medium">
-                Taxes {Object.keys(tax_breakdown).join(", ")}
-              </span>
-              <span>${taxes}</span>
-            </div>
+  {equipmentTotal > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">Equipment Total</span>
+      <span>${formatCurrency(equipmentTotal)}</span>
+    </div>
+  )}
 
-            <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t">
-              <span>Total Payment (CAD)</span>
-              <span>${total_amount}</span>
-            </div>
-          </div>
+  {labourCharge > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">Labour Charge</span>
+      <span>${formatCurrency(labourCharge)}</span>
+    </div>
+  )}
+
+  {combinedLabour > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">
+        Additional Large Monitor / Kiosk / Wall Mount + Screen Labour
+      </span>
+      <span>${formatCurrency(combinedLabour)}</span>
+    </div>
+  )}
+
+  {insurance > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">Insurance</span>
+      <span>${formatCurrency(insurance)}</span>
+    </div>
+  )}
+
+  {consumablesTotal > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">Consumables</span>
+      <span>${formatCurrency(consumablesTotal)}</span>
+    </div>
+  )}
+
+  {adminFees > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">Admin Fees</span>
+      <span>${formatCurrency(adminFees)}</span>
+    </div>
+  )}
+
+  {deliveryPickup > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">Delivery/Pickup</span>
+      <span>${formatCurrency(deliveryPickup)}</span>
+    </div>
+  )}
+
+  {subtotal > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">Subtotal</span>
+      <span>${formatCurrency(subtotal)}</span>
+    </div>
+  )}
+
+  {taxes > 0 && (
+    <div className="flex justify-between">
+      <span className="text-black font-medium">
+        Taxes {Object.keys(tax_breakdown).join(", ")}
+      </span>
+      <span>${formatCurrency(taxes)}</span>
+    </div>
+  )}
+
+  {/* Total Payment always shows */}
+  <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t">
+    <span>Total Payment (CAD)</span>
+    <span>${formatCurrency(total_amount)}</span>
+  </div>
+</div>
+
         </div>
       </div>
 
