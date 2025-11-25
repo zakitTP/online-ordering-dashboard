@@ -14,6 +14,7 @@ import {
   FaReceipt,
   FaCalendarAlt,
   FaIdCard,
+  FaCheckCircle,
 } from "react-icons/fa";
 
 const formatCurrency = (val) => {
@@ -37,8 +38,16 @@ export default function ViewOrder() {
   const [sendNotification, setSendNotification] = useState(true);
   const [refundAmount, setRefundAmount] = useState(0);
   const [refundNote, setRefundNote] = useState("");
+  
+  // New state for mark payment modal
+  const [showMarkPaymentPopup, setShowMarkPaymentPopup] = useState(false);
+  const [markPaymentLoading, setMarkPaymentLoading] = useState(false);
+  const [paymentDate, setPaymentDate] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [paymentMemo, setPaymentMemo] = useState("");
+  
   const { user } = useSelector((state) => state.user);
-  console.log(user);
+  console.log(order);
   
   // Check if user can process refund
   const canProcessRefund = () => {
@@ -153,6 +162,69 @@ export default function ViewOrder() {
     }
   };
 
+  // Handle mark payment submission
+  const handleMarkPaymentSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!paymentDate || !paymentReference) {
+      toast.error("Payment date and reference number are required");
+      return;
+    }
+
+    setMarkPaymentLoading(true);
+
+    try {
+      const response = await apiClient.post("/api/orders/mark-payment", {
+        order_id: order.id,
+        payment_date: paymentDate,
+        reference_number: paymentReference,
+        memo: paymentMemo,
+      });
+
+      if (response.status === 200) {
+        toast.success(
+          response.data.message || "Payment marked as completed successfully!"
+        );
+
+        // Update local order state
+        setOrder((prevOrder) => ({
+          ...prevOrder,
+          status: "completed",
+          payment_type: "marked_paid", // or whatever the API returns
+          payment_date: paymentDate,
+          payment_reference: paymentReference,
+          payment_memo: paymentMemo,
+        }));
+
+        setShowMarkPaymentPopup(false);
+        setPaymentDate("");
+        setPaymentReference("");
+        setPaymentMemo("");
+
+        // Refresh order data to get latest status
+        setTimeout(() => {
+          fetchOrder();
+        }, 1000);
+      } else {
+        throw new Error(response.data.error || "Failed to mark payment");
+      }
+    } catch (error) {
+      console.error("Mark payment error:", error);
+
+      let errorMessage = "Failed to mark payment";
+
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setMarkPaymentLoading(false);
+    }
+  };
+
   if (loading)
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -188,14 +260,32 @@ export default function ViewOrder() {
   const consumablesTotal = order_detail?.consumablesTotal || 0;
   const tax_breakdown = order_detail?.tax_breakdown || "";
   
+  // Payment type handling
+  const paymentType = order?.payment_type || "card";
+  const getPaymentTypeDisplay = () => {
+    switch (paymentType) {
+      case "pay_later":
+        return "Pay Later";
+      case "card":
+        return "Card";
+      case "marked_paid":
+        return "Marked as Paid";
+      default:
+        return paymentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+  };
+
   // Check if order is already refunded
   const isRefunded = status === "refunded";
 
-  // Check if refund button should be shown
-  const showRefundButton = canProcessRefund() && status === "completed" && !isRefunded;
+  // Check if refund button should be shown - only for card payments
+  const showRefundButton = canProcessRefund() && status === "completed" && !isRefunded && paymentType === "card";
+
+  // Check if mark payment button should be shown
+  const showMarkPaymentButton = status === "pending" && paymentType === "pay_later";
 
   return (
-    <div className="md:p-4 p-0 space-y-6">
+    <div className="md:p-4 p-0 ">
       <ToastContainer position="top-right" autoClose={5000} />
 
       <div className="pb-4">
@@ -215,8 +305,22 @@ export default function ViewOrder() {
             <p className="text-black mt-1">Order #{order.id}</p>
             <p className="text-black mt-1">{event_info.showName}</p>
           </div>
-          {showRefundButton && (
-            <div className="mt-4 md:mt-0 flex space-x-3">
+          <div className="mt-4 md:mt-0 flex space-x-3">
+            {showMarkPaymentButton && (
+              <button
+                onClick={() => setShowMarkPaymentPopup(true)}
+                disabled={markPaymentLoading}
+                className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {markPaymentLoading ? (
+                  <FaSpinner className="mr-2 animate-spin" />
+                ) : (
+                  <FaCheckCircle className="mr-2" />
+                )}
+                {markPaymentLoading ? "Processing..." : "Mark Payment"}
+              </button>
+            )}
+            {showRefundButton && (
               <button
                 onClick={() => setShowRefundPopup(true)}
                 disabled={refundLoading}
@@ -229,8 +333,8 @@ export default function ViewOrder() {
                 )}
                 {refundLoading ? "Processing..." : "Process Refund"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Order Summary, Customer Info, Event Info */}
@@ -261,28 +365,61 @@ export default function ViewOrder() {
               </div>
               <div className="flex justify-between">
                 <span>Payment Method:</span>
-                <span className="font-medium">Card</span>
+                <span className="font-medium">{getPaymentTypeDisplay()}</span>
               </div>
               <div className="flex justify-between">
                 <span>Amount:</span>
                 <span className="font-medium">${total_amount}</span>
               </div>
-              {order?.transaction_detail?.balance_transaction_id && (
+              
+              {/* Show transaction details only for card payments */}
+              {paymentType === "card" && order?.transaction_detail?.balance_transaction_id && (
                 <div className="flex justify-between">
-                  <span>
-                    Transaction Id:
-                    <span className="font-medium">
-                      {order?.transaction_detail?.balance_transaction_id}
-                    </span>
+                  <span>Transaction Id:</span>
+                  <span className="font-medium">
+                    {order?.transaction_detail?.balance_transaction_id}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Ref Id:</span>
-                <span className="font-medium">
-                  {order?.transaction_detail?.charge_id}
-                </span>
-              </div>
+              
+              {/* Show reference ID only for card payments */}
+              {paymentType === "card" && order?.transaction_detail?.charge_id && (
+                <div className="flex justify-between">
+                  <span>Ref Id:</span>
+                  <span className="font-medium">
+                    {order?.transaction_detail?.charge_id}
+                  </span>
+                </div>
+              )}
+              
+              {/* Show payment reference for marked payments */}
+              {paymentType === "pay_later" && order?.transaction_detail?.reference_number && (
+                <div className="flex justify-between">
+                  <span>Payment Reference:</span>
+                  <span className="font-medium">
+                    {order?.transaction_detail?.reference_number}
+                  </span>
+                </div>
+              )}
+              
+              {/* Show payment date for marked payments */}
+              {paymentType === "pay_later" && order?.transaction_detail?.marked_paid_at && (
+                <div className="flex justify-between">
+                  <span>Payment Date:</span>
+                  <span className="font-medium">
+                    {new Date( order?.transaction_detail?.marked_paid_at).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+
+              {paymentType === "pay_later" && order?.transaction_detail?.memo && (
+                <div className="flex justify-between">
+                  <span>Memo:</span>
+                  <span className="font-medium">
+                    {order?.transaction_detail?.memo}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -581,10 +718,124 @@ export default function ViewOrder() {
         </div>
       </div>
 
+      {/* Mark Payment Popup */}
+      {showMarkPaymentPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold text-black">
+                  Mark Payment as Completed
+                </h3>
+                <button
+                  onClick={() => !markPaymentLoading && setShowMarkPaymentPopup(false)}
+                  disabled={markPaymentLoading}
+                  className="text-brand-600 text-xl hover:text-gray-700 disabled:opacity-50"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form onSubmit={handleMarkPaymentSubmit}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label className="block text-base lg:text-lg text-black font-medium">
+                      Payment Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      disabled={markPaymentLoading}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-base lg:text-lg text-black font-medium">
+                      Reference Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentReference}
+                      onChange={(e) => setPaymentReference(e.target.value)}
+                      disabled={markPaymentLoading}
+                      required
+                      placeholder="Enter payment reference or check number"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-base lg:text-lg text-black font-medium">
+                    Memo (Optional)
+                  </label>
+                  <textarea
+                    rows="3"
+                    value={paymentMemo}
+                    onChange={(e) => setPaymentMemo(e.target.value)}
+                    disabled={markPaymentLoading}
+                    placeholder="Additional notes about this payment..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
+                  ></textarea>
+                </div>
+
+                <div className="mb-6 p-4 bg-blue-50 rounded-md text-black border">
+                  <h4 className="font-bold text-xl text-black mb-2">
+                    Order Summary
+                  </h4>
+                  <div className="space-y-2 text-base">
+                    <div className="flex justify-between">
+                      <span>Order ID:</span>
+                      <span>#{order.id}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Order Total:</span>
+                      <span className="font-medium">${total_amount}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Customer:</span>
+                      <span className="font-medium">{companyInfo.companyName}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowMarkPaymentPopup(false)}
+                    disabled={markPaymentLoading}
+                    className="px-4 py-2 rounded bg-black text-white font-semibold disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={markPaymentLoading}
+                    className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {markPaymentLoading ? (
+                      <>
+                        <FaSpinner className="mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Mark as Paid"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Refund Popup */}
       {showRefundPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[100vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-2xl font-bold text-black">

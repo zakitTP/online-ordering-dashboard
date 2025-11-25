@@ -82,6 +82,8 @@ export default function Orders() {
   const handleInvoice = (order) => {
     setInvoiceOrder({ ...order });
   };
+
+  console.log(orders)
   return (
     <div id="orders" className="view !mt-0">
       <ToastContainer />
@@ -100,7 +102,7 @@ export default function Orders() {
                 setSearch(e.target.value);
                 setPage(1); // reset to page 1 when searching
               }}
-              placeholder="Search with Company Name, Order ID"
+              placeholder="Search with Parnter Name, Order ID"
               className="w-full outline-none text-lg"
             />
           </div>
@@ -140,7 +142,7 @@ export default function Orders() {
                       Form Title
                     </th>
                     <th className="text-left font-medium px-3 py-2">
-                      Company Name
+                     Company (Client)
                     </th>
                     <th className="text-left font-medium px-3 py-2">Total</th>
                     <th className="text-left font-medium px-3 py-2">Status</th>
@@ -162,8 +164,8 @@ export default function Orders() {
                       <td className="px-3 py-2" data-label="Form Title">
                         {order?.form?.form_title} (ID:#{order?.form?.id})
                       </td>
-                      <td className="px-3 py-2" data-label="Company Name">
-                        {order?.form?.company_name}
+                      <td className="px-3 py-2" data-label="Company (Client)">
+                        {order?.order_detail?.clientData?.companyInfo?.companyName}
                       </td>
                       <td className="px-3 py-2 text-left" data-label="Total">
                         ${order.total_amount}

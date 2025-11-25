@@ -20,6 +20,7 @@ export default function Dashboard() {
     categories: 0,
     orders: 0,
     users: 0,
+    emails:0
   });
 
   const [loading, setLoading] = useState(true);
@@ -45,7 +46,7 @@ export default function Dashboard() {
     { label: "Products", value: counts.products, icon: FaBoxOpen, link: "/dashboard/products" },
     { label: "Categories", value: counts.categories, icon: FaTags, link: "/dashboard/categories" },
     { label: "Orders", value: counts.orders, icon: FaShoppingCart, link: "/dashboard/orders" },
-    { label: "Email Logs", value: counts.orders, icon: FaEnvelope, link: "/dashboard/emails" },
+    { label: "Email Logs", value: counts.emails, icon: FaEnvelope, link: "/dashboard/emails" },
     { label: "Users", value: counts.users, icon: FaUsers, link: "/dashboard/users" },
     { label: "Settings", value: <FaArrowRight />, icon: FaCogs, link: "/dashboard/settings" },
   ];
