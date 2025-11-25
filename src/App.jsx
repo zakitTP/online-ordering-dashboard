@@ -24,6 +24,7 @@ import Dashboard from "./pages/admin/Dashboard";
 import Profile from "./pages/admin/Profile";
 import Orders from "./pages/admin/Orders";
 import ViewOrder from "./pages/admin/Orders/ViewOrder";
+import EmailLogsPage from "./pages/admin/Emails";
 
 
 
@@ -61,6 +62,7 @@ function App() {
           <Route path="settings" element={<CompanySettings />} />
           <Route path="orders" element={<Orders />} />
           <Route path="orders/:id" element={<ViewOrder />} />
+          <Route path="emails" element={<EmailLogsPage />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

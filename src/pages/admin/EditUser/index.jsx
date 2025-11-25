@@ -4,7 +4,7 @@ import { FiUpload, FiX } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import apiClient from "../../../apiClient"; // ✅ centralized axios instance
+import apiClient from "../../../apiClient";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -16,6 +16,7 @@ export default function EditUser() {
   const [user, setUser] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true); // ✅ New state for fetching user data
 
   const fields = [
     { name: "name", label: "Full Name", type: "text", required: true },
@@ -30,10 +31,14 @@ export default function EditUser() {
     },
   ];
 
+  // Check if refund access should be shown
+  const showRefundAccess = user.role === "admin" || user.role === "manager";
+
   // 🔹 Fetch existing user data
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        setFetching(true); // ✅ Start fetching
         const res = await apiClient.get(`/api/users/${id}`);
         setUser(res.data);
         if (res.data.image) {
@@ -41,6 +46,8 @@ export default function EditUser() {
         }
       } catch (err) {
         toast.error("Failed to fetch user data");
+      } finally {
+        setFetching(false); // ✅ Stop fetching
       }
     };
     fetchUser();
@@ -82,6 +89,14 @@ export default function EditUser() {
 
     const formData = new FormData();
     fields.forEach((f) => formData.append(f.name, user[f.name]));
+    
+    // Add refund_access to form data if applicable
+    if (showRefundAccess) {
+      formData.append("refund_access", user.refund_access ? "1" : "0");
+    } else {
+      formData.append("refund_access", "0"); // Default to false for other roles
+    }
+    
     if (user.image instanceof File) formData.append("image", user.image);
 
     try {
@@ -102,6 +117,20 @@ export default function EditUser() {
       setLoading(false);
     }
   };
+
+  // ✅ Show loader while fetching user data
+  if (fetching) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4 flex items-center justify-center">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm max-w-md w-full mx-auto">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            <p className="text-lg text-gray-600">Loading user data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -136,6 +165,27 @@ export default function EditUser() {
                 )}
               </div>
             ))}
+            
+            {/* Refund Access Checkbox - Conditionally Rendered */}
+            {showRefundAccess && (
+              <div className="sm:col-span-2">
+                <div className="flex items-center space-x-3 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                  <input
+                    type="checkbox"
+                    id="refund_access"
+                    checked={user.refund_access || false}
+                    onChange={(e) => handleChange("refund_access", e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="refund_access" className="text-lg text-black font-medium">
+                    Refund Access
+                  </label>
+                  <span className="text-sm text-gray-500 ml-2">
+                    (Allow this user to process refunds)
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Image Upload */}

@@ -19,7 +19,7 @@ const ProductSelection = ({
 
   const { items: categories } = useSelector((state) => state.categories);
 
-  // Fetch all products on mount
+  // Fetch all products
   useEffect(() => {
     let cancelled = false;
 
@@ -30,13 +30,14 @@ const ProductSelection = ({
         const data = Array.isArray(res.data)
           ? res.data
           : res.data.data || [];
-        // Normalize IDs to strings to prevent type issues
+
         const normalized = data.map((p) => ({ ...p, id: String(p.id) }));
+
         if (!cancelled) {
           setAllProducts(normalized);
           setFilteredProducts(normalized);
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) {
           setAllProducts([]);
           setFilteredProducts([]);
@@ -47,12 +48,10 @@ const ProductSelection = ({
     };
 
     fetchAllProducts();
-    return () => {
-      cancelled = true;
-    };
+    return () => (cancelled = true);
   }, []);
 
-  // Filter products based on category and search term
+  // Filters
   useEffect(() => {
     let filtered = [...allProducts];
 
@@ -71,7 +70,42 @@ const ProductSelection = ({
     setFilteredProducts(filtered);
   }, [searchTerm, selectedCategory, allProducts]);
 
-  // Calculate rental days
+  // Hydrate selected products IN ORDER
+  useEffect(() => {
+    if (!allProducts.length || !formData?.products?.length) return;
+
+    const hydrated = formData.products
+      .map((id) => allProducts.find((p) => String(p.id) === String(id)))
+      .filter(Boolean);
+
+    setSelectedProducts(hydrated);
+  }, [allProducts, formData?.products]);
+
+  // Move item up
+  const moveProductUp = (id) => {
+    const idStr = String(id);
+    const index = formData.products.indexOf(idStr);
+    if (index <= 0) return;
+
+    const newOrder = [...formData.products];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+
+    setFormData((prev) => ({ ...prev, products: newOrder }));
+  };
+
+  // Move item down
+  const moveProductDown = (id) => {
+    const idStr = String(id);
+    const index = formData.products.indexOf(idStr);
+    if (index >= formData.products.length - 1) return;
+
+    const newOrder = [...formData.products];
+    [newOrder[index + 1], newOrder[index]] = [newOrder[index], newOrder[index + 1]];
+
+    setFormData((prev) => ({ ...prev, products: newOrder }));
+  };
+
+  // Rental days
   const calculateRentalDays = (startDate, startTime, endDate, endTime) => {
     if (startDate && endDate) {
       const start = dayjs(startDate, "YYYY-MM-DD");
@@ -84,35 +118,39 @@ const ProductSelection = ({
 
   // Add product
   const handleAddProduct = (product) => {
-    if (selectedProducts.some((p) => String(p.id) === String(product.id)))
-      return;
+    if (selectedProducts.some((p) => p.id === product.id)) return;
+
     setFormData((prev) => ({
       ...prev,
       products: [...prev.products, String(product.id)],
     }));
+
     setSelectedProducts((prev) => [...prev, product]);
   };
 
   // Remove product
   const handleRemoveProduct = (id) => {
     const idStr = String(id);
+
     setFormData((prev) => ({
       ...prev,
       products: prev.products.filter((pid) => pid !== idStr),
     }));
-    setSelectedProducts((prev) => prev.filter((p) => String(p.id) !== idStr));
+
+    setSelectedProducts((prev) =>
+      prev.filter((p) => String(p.id) !== idStr)
+    );
   };
 
-  // Toggle product selection
+  // Toggle selection
   const handleProductClick = (product) => {
-    if (selectedProducts.some((p) => String(p.id) === String(product.id))) {
+    if (selectedProducts.some((p) => p.id === product.id)) {
       handleRemoveProduct(product.id);
     } else {
       handleAddProduct(product);
     }
   };
 
-  // Check if product is selected
   const isProductSelected = (productId) =>
     selectedProducts.some((p) => String(p.id) === String(productId));
 
@@ -134,7 +172,8 @@ const ProductSelection = ({
             ))}
           </select>
         )}
-        <div className="flex items-center gap-2 flex-1 w-full">
+
+        <div className="flex items-center gap-2 flex-1">
           <i className="fa-solid fa-magnifying-glass text-slate-500"></i>
           <input
             placeholder="Search products e.g. monitor, mount, cable"
@@ -155,7 +194,7 @@ const ProductSelection = ({
         </div>
       )}
 
-      {/* Product Grid */}
+      {/* Grid */}
       {!isLoading && (
         <div className="grid gap-5 lg:grid-cols-3 md:grid-cols-2">
           {filteredProducts.length === 0 ? (
@@ -167,7 +206,9 @@ const ProductSelection = ({
           ) : (
             filteredProducts.map((p) => {
               const isSelected = isProductSelected(p.id);
-              const categoryName = p?.category?.name || "Uncategorized";
+              const categoryName = p.category?.name || "Uncategorized";
+              const orderIndex = formData.products.indexOf(String(p.id)) + 1;
+
               return (
                 <article
                   key={p.id}
@@ -178,10 +219,17 @@ const ProductSelection = ({
                   } bg-white text-black shadow-sm p-3 lg:p-4 flex flex-col gap-4 cursor-pointer transition-all`}
                   onClick={() => handleProductClick(p)}
                 >
+                  {/* Order Badge */}
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 bg-[#c81a1f] text-white px-2 py-1 rounded text-xs font-bold">
+                      #{orderIndex}
+                    </div>
+                  )}
+
                   {/* Header */}
                   <div className="flex justify-between items-center gap-3">
                     <div className="flex flex-col">
-                      <span className="w-fit bg-[#F6F6F6] rounded-full py-2 px-3 text-[12px] text-black font-bold">
+                      <span className="w-fit bg-[#F6F6F6] rounded-full py-2 px-3 text-[12px]">
                         {categoryName}
                       </span>
                       <h3 className="text-black text-base xl:text-lg font-semibold mt-1">
@@ -201,37 +249,71 @@ const ProductSelection = ({
                   <div className="mt-1 text-black rounded ring-1 ring-slate-200 p-2 bg-[#F6F6F6]">
                     <div className="flex flex-wrap gap-3 justify-between">
                       <div>
-                        <div className="text-[14px] font-semibold">Prepaid</div>
-                        <div>${p.prepaid_price}
-                        <span className="text-slate-500 text-[14px]">/day</span>
+                        <div className="text-[14px] font-semibold">
+                          Prepaid
+                        </div>
+                        <div>
+                          ${p.prepaid_price}
+                          <span className="text-slate-500 text-[14px]">/day</span>
                         </div>
                       </div>
+
                       <div>
-                        <div className="text-[14px] font-semibold">Standard</div>
+                        <div className="text-[14px] font-semibold">
+                          Standard
+                        </div>
                         <div>
                           ${p.standard_price}
                           <span className="text-slate-500 text-[14px]">/day</span>
                         </div>
                       </div>
+
                       <div>
                         <div className="text-[14px] font-semibold">Days</div>
                         <input
                           type="number"
+                          readOnly
                           value={calculateRentalDays(
                             formData?.startDate,
                             formData?.startTime,
                             formData?.finishDate,
                             formData?.finishTime
                           )}
-                          readOnly
                           className="mt-1 w-14 rounded border border-slate-300 px-2 py-1 text-center text-base bg-white"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Select/Remove Button */}
-                  <div className="mt-2 flex justify-end">
+                  {/* Buttons */}
+                  <div className="mt-2 flex justify-between items-center">
+                    {/* Reorder buttons */}
+                    {isSelected && (
+                      <div className="flex gap-2">
+                       <button
+  type="button"
+  className="px-2 py-1 border rounded text-xs"
+  onClick={(e) => {
+    e.stopPropagation();
+    moveProductUp(p.id);
+  }}
+>
+  ↑
+</button>
+
+<button
+  type="button"
+  className="px-2 py-1 border rounded text-xs"
+  onClick={(e) => {
+    e.stopPropagation();
+    moveProductDown(p.id);
+  }}
+>
+  ↓
+</button>
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={(e) => {

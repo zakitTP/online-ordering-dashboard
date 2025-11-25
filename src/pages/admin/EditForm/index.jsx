@@ -8,6 +8,7 @@ import FormDetail from "../../../components/admin/FormDetail";
 import EventInfo from "../../../components/admin/EventInfo";
 import ProductSelection from "../../../components/admin/ProductSelection";
 import Taxes from "../../../components/admin/Taxinfo";
+import Charges from "../../../components/admin/Charges";
 import apiClient from "../../../apiClient";
 
 import {
@@ -18,6 +19,7 @@ import {
   FaFloppyDisk,
   FaPaperPlane,
   FaCopy,
+  FaSackDollar
 } from "react-icons/fa6";
 
 const EditForm = () => {
@@ -32,6 +34,7 @@ const EditForm = () => {
 
   const [formData, setFormData] = useState({
     formTitle: "",
+    tradeshowName: "",
     contactName: "",
     contactEmail: "",
     contactPhone: "",
@@ -40,7 +43,7 @@ const EditForm = () => {
     companyLogo: null,
     showName: "",
     facility: "",
-    rooms: [""], // Initialize as array
+    rooms: [], // Initialize as empty array like AddForm
     loadInDate: "",
     loadInTime: "",
     startDate: "",
@@ -50,7 +53,7 @@ const EditForm = () => {
     products: [],
     status: "",
     accessCode: "",
-    otherSettings: { tax: {} },
+    otherSettings: { tax: {}, charges: { delvery: 200 } }, // Match AddForm structure
   });
 
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -60,10 +63,6 @@ const EditForm = () => {
     formUrl: "",
   });
 
-  console.log(formData)
-
-
-
   // Fetch existing form
   useEffect(() => {
     setLoading(true);
@@ -72,61 +71,98 @@ const EditForm = () => {
       .then((res) => {
         const data = res.data.form;
 
-        // Parse tax if it's a string
-        let taxObj = {};
+        // Parse other_settings if it exists
+        let otherSettings = { tax: {}, charges: { delvery: 200 } };
         try {
-          if (data.other_settings?.tax) {
-            taxObj =
-              typeof data.other_settings.tax === "string"
-                ? JSON.parse(data.other_settings.tax)
-                : data.other_settings.tax;
-
-            if (taxObj && Object.keys(taxObj).length) setTaxSelected(true);
+          if (data.other_settings) {
+            otherSettings = typeof data.other_settings === "string" 
+              ? JSON.parse(data.other_settings) 
+              : data.other_settings;
+            
+            // Ensure charges structure exists
+            if (!otherSettings.charges) {
+              otherSettings.charges = { delvery: 200 };
+            }
           }
         } catch (e) {
-          console.error("Failed to parse tax:", e);
+          console.error("Failed to parse other_settings:", e);
         }
 
-        // Convert rooms string to array
-        let roomsArray = [""];
-        if (data.event_info?.rooms) {
-          if (typeof data.event_info.rooms === 'string') {
-            // Split comma-separated string and filter out empty values
-            roomsArray = data.event_info.rooms.split(',').map(room => room.trim()).filter(room => room !== '');
-          } else if (Array.isArray(data.event_info.rooms)) {
-            roomsArray = data.event_info.rooms;
+        // Parse tax and set taxSelected
+        if (otherSettings.tax && Object.keys(otherSettings.tax).length > 0) {
+          setTaxSelected(true);
+        }
+
+        // Parse event_info
+        let eventInfo = {};
+        try {
+          if (data.event_info) {
+            eventInfo = typeof data.event_info === "string" 
+              ? JSON.parse(data.event_info) 
+              : data.event_info;
           }
-          // Ensure we always have at least one room field
-          if (roomsArray.length === 0) roomsArray = [""];
+        } catch (e) {
+          console.error("Failed to parse event_info:", e);
+        }
+
+        // Handle rooms - convert to array format like AddForm
+        let roomsArray = [];
+        if (eventInfo.rooms) {
+          if (typeof eventInfo.rooms === 'string') {
+            // Split comma-separated string and filter out empty values
+            roomsArray = eventInfo.rooms.split(',').map(room => room.trim()).filter(room => room !== '');
+          } else if (Array.isArray(eventInfo.rooms)) {
+            roomsArray = eventInfo.rooms;
+          }
+        }
+        // Ensure we have at least one room field
+        if (roomsArray.length === 0) {
+          roomsArray = [""];
+        }
+
+        // Parse products
+        let productsArray = [];
+        try {
+          if (data.product_select) {
+            productsArray = typeof data.product_select === "string" 
+              ? JSON.parse(data.product_select) 
+              : data.product_select;
+          }
+        } catch (e) {
+          console.error("Failed to parse products:", e);
         }
 
         setFormData({
-          formTitle: data.form_title,
-          contactName: data.contact_name,
-          contactEmail: data.contact_email,
-          contactPhone: data.contact_phone,
-          contactExt: data.contact_ext,
-          companyName: data.company_name,
-          companyLogo: data.company_logo,
-          companyLogoUrl: data.company_logo_url,
-          showName: data.event_info?.showName || "",
-          facility: data.event_info?.facility || "",
-          rooms: roomsArray, // Set as array
-          loadInDate: data.event_info?.loadInDate || "",
-          loadInTime: data.event_info?.loadInTime || "",
-          startDate: data.event_info?.startDate || "",
-          startTime: data.event_info?.startTime || "",
-          finishDate: data.event_info?.finishDate || "",
-          finishTime: data.event_info?.finishTime || "",
-          products: data.product_select || [],
+          formTitle: data.form_title || "",
+          tradeshowName: data.tradeshow_name || "",
+          contactName: data.contact_name || "",
+          contactEmail: data.contact_email || "",
+          contactPhone: data.contact_phone || "",
+          contactExt: data.contact_ext || "",
+          companyName: data.company_name || "",
+          companyLogo: data.company_logo || null,
+          companyLogoUrl: data.company_logo_url || "",
+          showName: eventInfo.showName || "",
+          facility: eventInfo.facility || "",
+          rooms: roomsArray,
+          loadInDate: eventInfo.loadInDate || "",
+          loadInTime: eventInfo.loadInTime || "",
+          startDate: eventInfo.startDate || "",
+          startTime: eventInfo.startTime || "",
+          finishDate: eventInfo.finishDate || "",
+          finishTime: eventInfo.finishTime || "",
+          products: productsArray,
           status: data.status || "",
           accessCode: data.access_code || "",
-          otherSettings: { ...data.other_settings, tax: taxObj },
+          otherSettings: otherSettings,
         });
 
-        setSelectedProducts(res.data.products || []);
+        setSelectedProducts(productsArray);
       })
-      .catch(() => toast.error("Failed to load form data"))
+      .catch((err) => {
+        console.error("Error loading form:", err);
+        toast.error("Failed to load form data");
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -150,7 +186,6 @@ const EditForm = () => {
       companyLogo: "Company Logo",
       showName: "Show Name",
       facility: "Facility",
-      rooms: "Room",
       loadInDate: "Load In Date",
       loadInTime: "Load In Time",
       startDate: "Start Date",
@@ -158,7 +193,11 @@ const EditForm = () => {
       finishDate: "Finish Date",
       finishTime: "Finish Time",
     };
-    return fieldNameMap[fieldName] || fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+
+    return (
+      fieldNameMap[fieldName] ||
+      fieldName.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
+    );
   };
 
   const validateForm = (status) => {
@@ -178,8 +217,12 @@ const EditForm = () => {
       "companyName",
       "showName",
       "facility",
+      "loadInDate",
+      "loadInTime",
       "startDate",
+      "startTime",
       "finishDate",
+      "finishTime",
     ];
 
     for (let field of requiredFields) {
@@ -221,20 +264,20 @@ const EditForm = () => {
       payload.append("contact_name", formData.contactName);
       payload.append("contact_email", formData.contactEmail);
       payload.append("contact_phone", formData.contactPhone);
-    payload.append("contact_ext", formData.contactExt ?? "");
+      payload.append("contact_ext", formData.contactExt || "");
       payload.append("company_name", formData.companyName);
 
       if (formData.companyLogo instanceof File) {
         payload.append("company_logo", formData.companyLogo);
       }
 
-      // ✅ FIXED: Use JSON.stringify like AddForm.js to keep rooms as array
+      // Use same format as AddForm
       payload.append(
         "event_info",
         JSON.stringify({
           showName: formData.showName,
           facility: formData.facility,
-          rooms: formData.rooms, // Array hi rahega - "build,kio" ek value rahega
+          rooms: formData.rooms, // Array format like AddForm
           loadInDate: formData.loadInDate,
           loadInTime: formData.loadInTime,
           startDate: formData.startDate,
@@ -244,17 +287,8 @@ const EditForm = () => {
         })
       );
 
-      formData.products.forEach((productId, index) => {
-        payload.append(`product_select[${index}]`, productId);
-      });
-
-      Object.entries(formData.otherSettings || {}).forEach(([key, value]) => {
-        payload.append(
-          `other_settings[${key}]`,
-          typeof value === "object" ? JSON.stringify(value) : value
-        );
-      });
-
+      payload.append("product_select", JSON.stringify(formData.products));
+      payload.append("other_settings", JSON.stringify(formData.otherSettings));
       payload.append("status", status);
 
       const res = await apiClient.post(`/api/forms/${id}`, payload, {
@@ -269,16 +303,16 @@ const EditForm = () => {
       setFormData((prev) => ({
         ...prev,
         status: updatedForm.status,
-        accessCode: updatedForm.access_code,
+        accessCode: updatedForm.access_code || "",
       }));
 
       toast.success(
-        `Form ${status === "draft" ? "saved as draft" : "published"} successfully`
+        `Form ${status === "draft" ? "saved as draft" : "published"} successfully!`
       );
 
       const formUrl = `https://av-canada.com/order/client/orderform/${id}`;
       setModalContent({
-        accessCode: updatedForm.access_code,
+        accessCode: updatedForm.access_code || "",
         formUrl,
       });
       setModalVisible(true);
@@ -324,7 +358,7 @@ const EditForm = () => {
   }
 
   return (
-    <section id="wizardSection" className="border rounded-lg overflow-hidden shadow-md">
+    <section id="wizardSection" className="border rounded-lg overflow-visible shadow-md">
       <ToastContainer position="top-right" autoClose={3000} />
       {saving && (
         <div className="fixed inset-0 bg-black/30 z-50 grid place-items-center">
@@ -335,7 +369,7 @@ const EditForm = () => {
       {/* Tabs */}
       <nav
         id="wizardTabs"
-        className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-2 gap-2 p-3 sm:p-4 bg-slate-50 border-b"
+        className="grid lg:grid-cols-5 md:grid-cols-2 grid-cols-2 gap-2 p-3 sm:p-4 bg-slate-50 border-b"
       >
         <button
           data-step="1"
@@ -372,163 +406,218 @@ const EditForm = () => {
         >
           <FaScissors /> Taxes
         </button>
+        <button
+          data-step="5"
+          className={`${stepBtnBase} ${activeStep === 5 ? activeTab : inactiveTab}`}
+          onClick={() => setActiveStep(5)}
+          type="button"
+        >
+          <FaSackDollar /> Charges
+        </button>
       </nav>
 
       {/* Steps */}
       <form className="p-4 md:p-4 lg:p-6 space-y-10">
-        {activeStep === 1 && (
-          <section>
-            <h3 className="font-bold text-2xl mb-4">Form Details</h3>
-            <FormDetail formData={formData} onInputChange={handleInputChange} />
-            <div className="flex items-center justify-end gap-3 mt-8 text-xl">
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
-              >
-                <FaFloppyDisk className="mr-2" /> Save Draft
-              </button>
-              <button
-                type="button"
-                onClick={handlePublish}
-                className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
-              >
-                <FaPaperPlane className="mr-2" /> Publish
-              </button>
-            </div>
-          </section>
-        )}
+        {/* Step 1 */}
+        <section
+          data-step="1"
+          className={`${activeStep === 1 ? "" : "screen-hidden hidden !mt-0"}`}
+        >
+          <h3 className="font-bold text-2xl mb-4">Form Details</h3>
+          <FormDetail formData={formData} onInputChange={handleInputChange} />
 
-        {activeStep === 2 && (
-          <section>
-            <EventInfo formData={formData} onInputChange={handleInputChange} setFormData={setFormData} />
-            <div className="flex items-center justify-end gap-3 mt-8 text-xl">
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
-              >
-                <FaFloppyDisk className="mr-2" /> Save Draft
-              </button>
-              <button
-                type="button"
-                onClick={handlePublish}
-                className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
-              >
-                <FaPaperPlane className="mr-2" /> Publish
-              </button>
-            </div>
-          </section>
-        )}
+          <div className="flex items-center justify-end gap-3 mt-8 text-xl">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
+            >
+              <FaFloppyDisk className="mr-2" /> Save Draft
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
+            >
+              <FaPaperPlane className="mr-2" /> Publish
+            </button>
+          </div>
+        </section>
 
-        {activeStep === 3 && (
-          <section>
-            <h3 className="font-bold text-2xl mb-4">Product Selection</h3>
-            <ProductSelection
-              formData={formData}
-              setFormData={setFormData}
-              selectedProducts={selectedProducts}
-              setSelectedProducts={setSelectedProducts}
-              eventStart={formData.startDate}
-              eventEnd={formData.finishDate}
-            />
-            <div className="flex items-center justify-end gap-3 mt-8 text-xl">
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
-              >
-                <FaFloppyDisk className="mr-2" /> Save Draft
-              </button>
-              <button
-                type="button"
-                onClick={handlePublish}
-                className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
-              >
-                <FaPaperPlane className="mr-2" /> Publish
-              </button>
-            </div>
-          </section>
-        )}
+        {/* Step 2 */}
+        <section
+          data-step="2"
+          className={`${activeStep === 2 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
+        >
+          <EventInfo
+            formData={formData}
+            onInputChange={handleInputChange}
+            setFormData={setFormData}
+          />
 
-        {activeStep === 4 && (
-          <section>
-            <Taxes formData={formData} setFormData={setFormData} setTaxSelected={setTaxSelected} />
-            <div className="flex items-center justify-end gap-3 mt-8 text-xl">
-              <button
-                type="button"
-                onClick={handleSaveDraft}
-                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
-              >
-                <FaFloppyDisk className="mr-2" /> Save Draft
-              </button>
-              <button
-                type="button"
-                onClick={handlePublish}
-                className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
-              >
-                <FaPaperPlane className="mr-2" /> Publish
-              </button>
-            </div>
-          </section>
-        )}
+          <div className="flex items-center justify-end gap-3 mt-8 text-xl">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
+            >
+              <FaFloppyDisk className="mr-2" /> Save Draft
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
+            >
+              <FaPaperPlane className="mr-2" /> Publish
+            </button>
+          </div>
+        </section>
+
+        {/* Step 3 */}
+        <section
+          data-step="3"
+          className={`${activeStep === 3 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
+        >
+          <h3 className="font-bold text-2xl mb-4">Product Selection</h3>
+
+          <ProductSelection
+            formData={formData}
+            setFormData={setFormData}
+            selectedProducts={selectedProducts}
+            setSelectedProducts={setSelectedProducts}
+            eventStart={formData.startDate}
+            eventEnd={formData.finishDate}
+          />
+
+          <div className="flex items-center justify-end gap-3 mt-8 text-xl">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
+            >
+              <FaFloppyDisk className="mr-2" /> Save Draft
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
+            >
+              <FaPaperPlane className="mr-2" /> Publish
+            </button>
+          </div>
+        </section>
+
+        {/* Step 4 */}
+        <section
+          data-step="4"
+          className={`${activeStep === 4 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
+        >
+          <Taxes
+            formData={formData}
+            setFormData={setFormData}
+            setTaxSelected={setTaxSelected}
+          />
+
+          <div className="flex items-center justify-end gap-3 mt-8 text-xl">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
+            >
+              <FaFloppyDisk className="mr-2" /> Save Draft
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
+            >
+              <FaPaperPlane className="mr-2" /> Publish
+            </button>
+          </div>
+        </section>
+
+        {/* Step 5 */}
+        <section
+          data-step="5"
+          className={`${activeStep === 5 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
+        >
+          <Charges
+            formData={formData}
+            setFormData={setFormData}
+          />
+
+          <div className="flex items-center justify-end gap-3 mt-8 text-xl">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
+            >
+              <FaFloppyDisk className="mr-2" /> Save Draft
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
+            >
+              <FaPaperPlane className="mr-2" /> Publish
+            </button>
+          </div>
+        </section>
       </form>
 
       {/* Modal */}
-  {modalVisible && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div className="bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center border border-gray-100 transition-all duration-300">
-      {/* Access Code Section (only if published) */}
-      {formData.status === "publish" && (
-        <>
-          <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
-            Access Code
-          </h2>
-          <div className="flex justify-center items-center gap-3 mb-6">
-            <span className="text-2xl font-bold text-black tracking-wider">
-              {modalContent.accessCode}
-            </span>
+      {modalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center border border-gray-100 transition-all duration-300">
+            {/* Access Code Section (only if published) */}
+            {formData.status === "publish" && (
+              <>
+                <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
+                  Access Code
+                </h2>
+                <div className="flex justify-center items-center gap-3 mb-6">
+                  <span className="text-2xl font-bold text-black tracking-wider">
+                    {modalContent.accessCode}
+                  </span>
+                  <button
+                    onClick={() => handleCopy(modalContent.accessCode)}
+                    className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
+                  >
+                    <FaCopy className="text-sm" /> Copy
+                  </button>
+                </div>
+                <div className="h-px bg-gray-200 mb-6"></div>
+              </>
+            )}
+
+            {/* Form URL Section */}
+            <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
+              Form URL
+            </h2>
+            <div className="flex justify-center items-center gap-3 mb-8">
+              <div className="flex items-center justify-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 w-[80%] overflow-x-auto">
+                <p className="text-gray-700 text-sm break-words text-center">
+                  {modalContent.formUrl}
+                </p>
+              </div>
+              <button
+                onClick={() => handleCopy(modalContent.formUrl)}
+                className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
+              >
+                <FaCopy className="text-sm" /> Copy
+              </button>
+            </div>
+
+            {/* OK Button */}
             <button
-              onClick={() => handleCopy(modalContent.accessCode)}
-              className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
+              onClick={handleModalOk}
+              className="w-full bg-[#C81A1F] hover:bg-[#a4161b] text-white font-semibold text-lg py-3 rounded-xl shadow-sm transition-all"
             >
-              <FaCopy className="text-sm" /> Copy
+              OK
             </button>
           </div>
-          <div className="h-px bg-gray-200 mb-6"></div>
-        </>
-      )}
-
-      {/* Form URL Section */}
-      <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
-        Form URL
-      </h2>
-      <div className="flex justify-center items-center gap-3 mb-8">
-        <div className="flex items-center justify-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 w-[80%] overflow-x-auto">
-          <p className="text-gray-700 text-sm break-words text-center">
-            {modalContent.formUrl}
-          </p>
         </div>
-        <button
-          onClick={() => handleCopy(modalContent.formUrl)}
-          className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
-        >
-          <FaCopy className="text-sm" /> Copy
-        </button>
-      </div>
-
-      {/* OK Button */}
-      <button
-        onClick={handleModalOk}
-        className="w-full bg-[#C81A1F] hover:bg-[#a4161b] text-white font-semibold text-lg py-3 rounded-xl shadow-sm transition-all"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
-
-
+      )}
     </section>
   );
 };

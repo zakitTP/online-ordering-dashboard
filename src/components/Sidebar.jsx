@@ -10,6 +10,7 @@ import {
   FiUsers,
   FiSettings,
   FiX,
+  FiMail
 } from "react-icons/fi";
 import Logo from "../assets/logo.png";
 
@@ -67,6 +68,7 @@ export default function Sidebar() {
       { name: "Products", path: "/dashboard/products", icon: <FiBox size={18} /> },
       { name: "Categories", path: "/dashboard/categories", icon: <FiTag size={18} /> },
       { name: "Orders", path: "/dashboard/orders", icon: <FiClipboard size={18} /> },
+      { name: "Email Logs", path: "/dashboard/emails", icon: <FiMail size={18} /> },
       { name: "Users", path: "/dashboard/users", icon: <FiUsers size={18} /> },
       { name: "Settings", path: "/dashboard/settings", icon: <FiSettings size={18} /> },
     ];

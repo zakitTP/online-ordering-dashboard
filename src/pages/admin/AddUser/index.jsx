@@ -1,16 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUpload, FiX } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import apiClient from "../../../apiClient"; // ✅ use your axios instance
+import apiClient from "../../../apiClient";
 
 export default function AddUser() {
   const [newUser, setNewUser] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
-  const navigate = useNavigate(); // ✅ navigation hook
+  const navigate = useNavigate();
 
   const fields = [
     { name: "name", label: "Full Name", type: "text", required: true },
@@ -24,6 +24,9 @@ export default function AddUser() {
       required: true,
     },
   ];
+
+  // Check if refund access should be shown
+  const showRefundAccess = newUser.role === "admin" || newUser.role === "manager";
 
   const handleChange = (field, value) => {
     setNewUser({ ...newUser, [field]: value });
@@ -65,6 +68,14 @@ export default function AddUser() {
     fields.forEach((f) => {
       if (newUser[f.name]) formData.append(f.name, newUser[f.name]);
     });
+    
+    // Add refund_access to form data if applicable
+    if (showRefundAccess) {
+      formData.append("refund_access", newUser.refund_access ? "1" : "0");
+    } else {
+      formData.append("refund_access", "0"); // Default to false for other roles
+    }
+    
     if (newUser.image) formData.append("image", newUser.image);
 
     try {
@@ -73,7 +84,7 @@ export default function AddUser() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast.success("User added successfully!");
-      navigate("/dashboard/users"); // ✅ navigate after success
+      navigate("/dashboard/users");
     } catch (err) {
       const message =
         err.response?.data?.message ||
@@ -121,6 +132,27 @@ export default function AddUser() {
                 )}
               </div>
             ))}
+            
+            {/* Refund Access Checkbox - Conditionally Rendered */}
+            {showRefundAccess && (
+              <div className="sm:col-span-2">
+                <div className="flex items-center space-x-3 p-4 border border-slate-200 rounded-lg bg-slate-50">
+                  <input
+                    type="checkbox"
+                    id="refund_access"
+                    checked={newUser.refund_access || false}
+                    onChange={(e) => handleChange("refund_access", e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label htmlFor="refund_access" className="text-lg text-black font-medium">
+                    Refund Access
+                  </label>
+                  <span className="text-sm text-gray-500 ml-2">
+                    (Allow this user to process refunds)
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Image Upload */}
@@ -176,7 +208,7 @@ export default function AddUser() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/dashboard/users")} // ✅ navigate on cancel
+              onClick={() => navigate("/dashboard/users")}
               className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32"
             >
               Cancel

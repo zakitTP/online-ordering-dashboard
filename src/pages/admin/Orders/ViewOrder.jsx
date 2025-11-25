@@ -38,7 +38,23 @@ export default function ViewOrder() {
   const [refundAmount, setRefundAmount] = useState(0);
   const [refundNote, setRefundNote] = useState("");
   const { user } = useSelector((state) => state.user);
-  console.log(order);
+  console.log(user);
+  
+  // Check if user can process refund
+  const canProcessRefund = () => {
+    // Super admin has full access
+    if (user?.role === "super admin") {
+      return true;
+    }
+    
+    // For other roles, check refund_access permission
+    if (user?.refund_access == 1) {
+      return true;
+    }
+    
+    return false;
+  };
+
   // Fetch order
   const fetchOrder = async () => {
     try {
@@ -75,7 +91,7 @@ export default function ViewOrder() {
       return;
     }
 
-    if (order?.total_amount > order?.total_amount) {
+    if (refundAmount > order?.total_amount) {
       toast.error("Refund amount cannot exceed order total");
       return;
     }
@@ -171,19 +187,12 @@ export default function ViewOrder() {
   const subtotal = order_detail?.subtotal || 0;
   const consumablesTotal = order_detail?.consumablesTotal || 0;
   const tax_breakdown = order_detail?.tax_breakdown || "";
+  
   // Check if order is already refunded
   const isRefunded = status === "refunded";
 
-  // Get refund transaction ID from refund response
-  const refundTransactionId =
-    refund_detail?.refund_response?.gatewayResponse
-      ?.transactionProcessingDetails?.transactionId;
-
-  // Get refund date
-  const refundDate = refund_detail?.refunded_at;
-
-  // Get refund amount
-  const refundAmountValue = refund_detail?.refund_amount;
+  // Check if refund button should be shown
+  const showRefundButton = canProcessRefund() && status === "completed" && !isRefunded;
 
   return (
     <div className="md:p-4 p-0 space-y-6">
@@ -206,22 +215,20 @@ export default function ViewOrder() {
             <p className="text-black mt-1">Order #{order.id}</p>
             <p className="text-black mt-1">{event_info.showName}</p>
           </div>
-          {user?.role !== "manager" && status == "completed" && (
+          {showRefundButton && (
             <div className="mt-4 md:mt-0 flex space-x-3">
-              {!isRefunded && (
-                <button
-                  onClick={() => setShowRefundPopup(true)}
-                  disabled={refundLoading}
-                  className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {refundLoading ? (
-                    <FaSpinner className="mr-2 animate-spin" />
-                  ) : (
-                    <FaUndoAlt className="mr-2" />
-                  )}
-                  {refundLoading ? "Processing..." : "Process Refund"}
-                </button>
-              )}
+              <button
+                onClick={() => setShowRefundPopup(true)}
+                disabled={refundLoading}
+                className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-semibold flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {refundLoading ? (
+                  <FaSpinner className="mr-2 animate-spin" />
+                ) : (
+                  <FaUndoAlt className="mr-2" />
+                )}
+                {refundLoading ? "Processing..." : "Process Refund"}
+              </button>
             </div>
           )}
         </div>

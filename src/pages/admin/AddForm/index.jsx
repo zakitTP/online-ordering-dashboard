@@ -8,6 +8,7 @@ import FormDetail from "../../../components/admin/FormDetail";
 import EventInfo from "../../../components/admin/EventInfo";
 import ProductSelection from "../../../components/admin/ProductSelection";
 import Taxes from "../../../components/admin/Taxinfo";
+import Charges from "../../../components/admin/Charges";
 import apiClient from "../../../apiClient";
 
 import {
@@ -18,6 +19,7 @@ import {
   FaFloppyDisk,
   FaPaperPlane,
   FaCopy,
+  FaSackDollar,
 } from "react-icons/fa6";
 
 const AddForm = () => {
@@ -33,7 +35,7 @@ const AddForm = () => {
     contactName: "",
     contactEmail: "",
     contactPhone: "",
-    contactExt:"",
+    contactExt: "",
     companyName: "",
     companyLogo: null,
     showName: "",
@@ -48,7 +50,7 @@ const AddForm = () => {
     products: [],
     status: "",
     accessCode: "",
-    otherSettings: { tax: {} },
+    otherSettings: { tax: {}, charges: { delvery: 200 } },
   });
 
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -90,7 +92,9 @@ const AddForm = () => {
 
     return (
       fieldNameMap[fieldName] ||
-      fieldName.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
+      fieldName
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (str) => str.toUpperCase())
     );
   };
 
@@ -128,7 +132,7 @@ const AddForm = () => {
     }
 
     // Check if at least one room has value
-    const hasValidRooms = formData.rooms.some(room => room.trim() !== "");
+    const hasValidRooms = formData.rooms.some((room) => room.trim() !== "");
     if (!hasValidRooms) {
       toast.error("Please enter at least one room");
       return false;
@@ -198,7 +202,9 @@ const AddForm = () => {
       }));
 
       toast.success(
-        `Form ${status === "draft" ? "saved as draft" : "published"} successfully!`
+        `Form ${
+          status === "draft" ? "saved as draft" : "published"
+        } successfully!`
       );
 
       const formUrl = `https://av-canada.com/order/client/orderform/${savedForm.id}`;
@@ -241,7 +247,10 @@ const AddForm = () => {
   const inactiveTab = "bg-white";
 
   return (
-    <section id="wizardSection" className="border rounded-lg overflow-visible shadow-md">
+    <section
+      id="wizardSection"
+      className="border rounded-lg overflow-visible shadow-md"
+    >
       <ToastContainer position="top-right" autoClose={3000} />
       {loading && (
         <div className="fixed inset-0 bg-black/30 z-50 grid place-items-center">
@@ -252,11 +261,13 @@ const AddForm = () => {
       {/* Tabs */}
       <nav
         id="wizardTabs"
-        className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-2 gap-2 p-3 sm:p-4 bg-slate-50 border-b"
+        className="grid lg:grid-cols-5 md:grid-cols-2 grid-cols-2 gap-2 p-3 sm:p-4 bg-slate-50 border-b"
       >
         <button
           data-step="1"
-          className={`${stepBtnBase} ${activeStep === 1 ? activeTab : inactiveTab}`}
+          className={`${stepBtnBase} ${
+            activeStep === 1 ? activeTab : inactiveTab
+          }`}
           onClick={() => setActiveStep(1)}
           type="button"
         >
@@ -265,7 +276,9 @@ const AddForm = () => {
 
         <button
           data-step="2"
-          className={`${stepBtnBase} ${activeStep === 2 ? activeTab : inactiveTab}`}
+          className={`${stepBtnBase} ${
+            activeStep === 2 ? activeTab : inactiveTab
+          }`}
           onClick={() => setActiveStep(2)}
           type="button"
         >
@@ -274,7 +287,9 @@ const AddForm = () => {
 
         <button
           data-step="3"
-          className={`${stepBtnBase} ${activeStep === 3 ? activeTab : inactiveTab}`}
+          className={`${stepBtnBase} ${
+            activeStep === 3 ? activeTab : inactiveTab
+          }`}
           onClick={() => setActiveStep(3)}
           type="button"
         >
@@ -283,11 +298,23 @@ const AddForm = () => {
 
         <button
           data-step="4"
-          className={`${stepBtnBase} ${activeStep === 4 ? activeTab : inactiveTab}`}
+          className={`${stepBtnBase} ${
+            activeStep === 4 ? activeTab : inactiveTab
+          }`}
           onClick={() => setActiveStep(4)}
           type="button"
         >
           <FaScissors /> Taxes
+        </button>
+        <button
+          data-step="5"
+          className={`${stepBtnBase} ${
+            activeStep === 5 ? activeTab : inactiveTab
+          }`}
+          onClick={() => setActiveStep(5)}
+          type="button"
+        >
+          <FaSackDollar /> Charges
         </button>
       </nav>
 
@@ -322,7 +349,9 @@ const AddForm = () => {
         {/* Step 2 */}
         <section
           data-step="2"
-          className={`${activeStep === 2 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
+          className={`${
+            activeStep === 2 ? "!mt-0" : "screen-hidden hidden !mt-0"
+          }`}
         >
           <EventInfo
             formData={formData}
@@ -351,7 +380,9 @@ const AddForm = () => {
         {/* Step 3 */}
         <section
           data-step="3"
-          className={`${activeStep === 3 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
+          className={`${
+            activeStep === 3 ? "!mt-0" : "screen-hidden hidden !mt-0"
+          }`}
         >
           <h3 className="font-bold text-2xl mb-4">Product Selection</h3>
 
@@ -385,7 +416,9 @@ const AddForm = () => {
         {/* Step 4 */}
         <section
           data-step="4"
-          className={`${activeStep === 4 ? "!mt-0" : "screen-hidden hidden !mt-0"}`}
+          className={`${
+            activeStep === 4 ? "!mt-0" : "screen-hidden hidden !mt-0"
+          }`}
         >
           <Taxes
             formData={formData}
@@ -410,63 +443,87 @@ const AddForm = () => {
             </button>
           </div>
         </section>
+        {/* Step 5 */}
+        <section
+          data-step="5"
+          className={`${
+            activeStep === 5 ? "!mt-0" : "screen-hidden hidden !mt-0"
+          }`}
+        >
+          <Charges formData={formData} setFormData={setFormData} />
+
+          <div className="flex items-center justify-end gap-3 mt-8 text-xl">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white flex items-center"
+            >
+              <FaFloppyDisk className="mr-2" /> Save Draft
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              className="px-3 md:px-5 py-3 rounded bg-black text-white flex items-center"
+            >
+              <FaPaperPlane className="mr-2" /> Publish
+            </button>
+          </div>
+        </section>
       </form>
 
       {/* Modal */}
-{modalVisible && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div className="bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center border border-gray-100 transition-all duration-300">
-      {/* Access Code Section (only if published) */}
-      {formData.status === "publish" && (
-        <>
-          <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
-            Access Code
-          </h2>
-          <div className="flex justify-center items-center gap-3 mb-6">
-            <span className="text-2xl font-bold text-black tracking-wider">
-              {modalContent.accessCode}
-            </span>
+      {modalVisible && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center border border-gray-100 transition-all duration-300">
+            {/* Access Code Section (only if published) */}
+            {formData.status === "publish" && (
+              <>
+                <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
+                  Access Code
+                </h2>
+                <div className="flex justify-center items-center gap-3 mb-6">
+                  <span className="text-2xl font-bold text-black tracking-wider">
+                    {modalContent.accessCode}
+                  </span>
+                  <button
+                    onClick={() => handleCopy(modalContent.accessCode)}
+                    className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
+                  >
+                    <FaCopy className="text-sm" /> Copy
+                  </button>
+                </div>
+                <div className="h-px bg-gray-200 mb-6"></div>
+              </>
+            )}
+
+            {/* Form URL Section */}
+            <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
+              Form URL
+            </h2>
+            <div className="flex justify-center items-center gap-3 mb-8">
+              <div className="flex items-center justify-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 w-[80%] overflow-x-auto">
+                <p className="text-gray-700 text-sm break-words text-center">
+                  {modalContent.formUrl}
+                </p>
+              </div>
+              <button
+                onClick={() => handleCopy(modalContent.formUrl)}
+                className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
+              >
+                <FaCopy className="text-sm" /> Copy
+              </button>
+            </div>
+
+            {/* OK Button */}
             <button
-              onClick={() => handleCopy(modalContent.accessCode)}
-              className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
+              onClick={handleModalOk}
+              className="w-full bg-[#C81A1F] hover:bg-[#a4161b] text-white font-semibold text-lg py-3 rounded-xl shadow-sm transition-all"
             >
-              <FaCopy className="text-sm" /> Copy
+              OK
             </button>
           </div>
-          <div className="h-px bg-gray-200 mb-6"></div>
-        </>
-      )}
-
-      {/* Form URL Section */}
-      <h2 className="text-xl md:text-2xl font-semibold text-[#C81A1F] mb-3">
-        Form URL
-      </h2>
-      <div className="flex justify-center items-center gap-3 mb-8">
-        <div className="flex items-center justify-center bg-gray-50 border border-gray-200 rounded-md px-3 py-2 w-[80%] overflow-x-auto">
-          <p className="text-gray-700 text-sm break-words text-center">
-            {modalContent.formUrl}
-          </p>
         </div>
-        <button
-          onClick={() => handleCopy(modalContent.formUrl)}
-          className="flex items-center gap-1 bg-black text-white px-3 py-1.5 rounded-md hover:bg-[#C81A1F] transition-all"
-        >
-          <FaCopy className="text-sm" /> Copy
-        </button>
-      </div>
-
-      {/* OK Button */}
-      <button
-        onClick={handleModalOk}
-        className="w-full bg-[#C81A1F] hover:bg-[#a4161b] text-white font-semibold text-lg py-3 rounded-xl shadow-sm transition-all"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
-
-
+      )}
     </section>
   );
 };
