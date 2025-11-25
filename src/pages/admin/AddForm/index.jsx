@@ -314,7 +314,7 @@ const AddForm = () => {
           onClick={() => setActiveStep(5)}
           type="button"
         >
-          <FaSackDollar /> Charges
+          <FaSackDollar /> Fees
         </button>
       </nav>
 

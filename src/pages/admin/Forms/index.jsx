@@ -207,7 +207,7 @@ export default function Forms() {
         : "bg-[#dcdcdc]";
     return (
       <span
-        className={`inline-flex px-2 py-0.5 rounded-full justify-center border border-[#bbb] ${statusClass}`}
+        className={`inline-flex px-4 py-0.5 rounded-full !max-w-[fit-content] justify-center border border-[#bbb] ${statusClass}`}
       >
         {status === "publish" ? "Publish" : "Draft"}
       </span>

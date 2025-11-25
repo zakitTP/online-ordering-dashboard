@@ -178,7 +178,7 @@ export default function ProductList() {
                       <td className="px-3 py-2 font-medium" data-label="Product">{p.title}</td>
                       <td className="px-3 py-2" data-label="Category">
                         {p?.category &&
-                        <span className="inline-flex  justify-center border border-[#bbb]  px-4 py-0.5 rounded-full bg-[#dcdcdc] category-card-title text-sm">
+                        <span className="inline-flex  justify-center border border-[#bbb] text-center px-2 py-0.5 rounded-full bg-[#dcdcdc] category-card-title text-sm !max-w-[fit-content]">
                           {p?.category?.name}
                         </span> }
                       </td>

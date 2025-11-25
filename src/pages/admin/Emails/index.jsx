@@ -103,10 +103,10 @@ export default function EmailLogsPage() {
 
         {/* Filters - Simplified with only status filter */}
         <div className="bg-gray-50 p-4 rounded-lg mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <label className="block text-xl font-semibold text-black mb-1">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -120,10 +120,10 @@ export default function EmailLogsPage() {
             </div>
             
             {/* Filter Actions */}
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-2 ">
               <button
                 onClick={applyFilters}
-                className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white font-medium"
+                className="px-4 py-2 rounded bg-brand-600 hover:bg-brand-700 text-white w-full md:w-auto font-medium"
               >
                 Apply
               </button>
@@ -174,7 +174,7 @@ export default function EmailLogsPage() {
                           </div>
                         </td>
                         <td className="px-3 py-2 text-center" data-label="Status">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
+                          <span className={`px-2 py-1 rounded-full text-center  text-sm font-medium !max-w-[fit-content] ${getStatusColor(log.status)}`}>
                             {log.status}
                           </span>
                         </td>
@@ -188,7 +188,7 @@ export default function EmailLogsPage() {
                                 setSelectedLog(log);
                                 setShowViewModal(true);
                               }}
-                              className="px-2 py-1 rounded bg-blue-600 text-white text-sm"
+                              className="px-2 py-1 rounded bg-black text-white text-sm"
                               title="View Details"
                             >
                               <FiEye size={14} />
@@ -272,21 +272,21 @@ export default function EmailLogsPage() {
               <h3 className="text-2xl text-black font-bold">Email Log Details</h3>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-black bg-[#C81A1F] rounded-full transition-colors"
                 title="Close"
               >
-                <FiX size={24} className="text-gray-600" />
+                <FiX size={24} className="text-white" />
               </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">ID</label>
+                <label className="block text-base font-medium text-black">ID</label>
                 <p className="mt-1 text-black">{selectedLog.id}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <label className="block text-base font-medium text-black">Status</label>
                 <p className="mt-1">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedLog.status)}`}>
                     {selectedLog.status}
@@ -295,42 +295,42 @@ export default function EmailLogsPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">From Email</label>
+                <label className="block text-base font-medium text-black">From Email</label>
                 <p className="mt-1 text-black">{selectedLog.sender_email || 'N/A'}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">To Email</label>
+                <label className="block text-base font-medium text-black">To Email</label>
                 <p className="mt-1 text-black">{selectedLog.to_email}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Sent At</label>
+                <label className="block text-base font-medium text-black">Sent At</label>
                 <p className="mt-1 text-black">{formatDate(selectedLog.created_at)}</p>
               </div>
 
               {selectedLog.user && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">User</label>
+                  <label className="block text-base font-medium text-black">User</label>
                   <p className="mt-1 text-black">{selectedLog.user.name} ({selectedLog.user.email})</p>
                 </div>
               )}
 
               {selectedLog.order && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Order</label>
+                  <label className="block text-base font-medium text-black">Order</label>
                   <p className="mt-1 text-black">#{selectedLog.order.id}</p>
                 </div>
               )}
             </div>
             
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+              <label className="block text-base font-medium text-black mb-2">Subject</label>
               <p className="text-black p-3 bg-gray-50 rounded border">{selectedLog.subject}</p>
             </div>
             
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Body</label>
+              <label className="block text-base font-medium text-black mb-2">Email Body</label>
               <div className="p-3 bg-gray-50 rounded border max-h-60 overflow-y-auto">
                 {selectedLog.body ? (
                   <div 
@@ -345,7 +345,7 @@ export default function EmailLogsPage() {
             
             {selectedLog.error_message && (
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Error Message</label>
+                <label className="block text-base font-medium text-black mb-2">Error Message</label>
                 <p className="text-red-600 p-3 bg-red-50 rounded border">{selectedLog.error_message}</p>
               </div>
             )}
@@ -353,7 +353,7 @@ export default function EmailLogsPage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setShowViewModal(false)}
-                className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium"
+                className="px-4 py-2 rounded bg-black hover:bg-gray-900 text-white font-medium"
               >
                 Close
               </button>
