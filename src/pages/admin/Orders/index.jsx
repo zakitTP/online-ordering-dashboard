@@ -103,7 +103,7 @@ export default function Orders() {
                 setPage(1); // reset to page 1 when searching
               }}
               placeholder="Search with Parnter Name, Order ID"
-              className="w-full outline-none text-lg"
+              className="w-full outline-none text-base md:text-lg"
             />
           </div>
           <select
@@ -112,7 +112,7 @@ export default function Orders() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="w-1/2 px-3 py-2 rounded text-lg border border-slate-300"
+            className="w-full md:w-1/3 px-3 py-2 rounded text-lg border border-slate-300"
           >
             <option>All</option>
             <option>Pending</option>
