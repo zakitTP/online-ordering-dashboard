@@ -9,7 +9,7 @@ table.db-back-table thead th{
 table.db-back-table thead th:first-child{ border-top-left-radius:.5rem }
 table.db-back-table thead th:last-child{ border-top-right-radius:.5rem }
 table.db-back-table tbody td{ color:#000 !important; font-size:1rem !important }
-table.db-back-table tbody tr:nth-child(odd)  td{ background:#fff !important }
+table.db-back-table tbody tr:nth-child(odd)  td{ background:#fff  }
 table.db-back-table tbody tr:nth-child(even) td{ background:#f1f5f9 !important }
 
 .thumb{ width:2.5rem; height:2.5rem; object-fit:cover; border-radius:.5rem; border:1px solid #e2e8f0; background:#f8fafc }
@@ -279,3 +279,25 @@ details.dropdown[open] .menu{ display:block; }
       width: 100%!important;
   }
 }
+
+@media (max-width: 768px) {
+  .mobile-tooltip {
+    position: absolute !important;
+    left: 50% !important;
+    top: 1.8rem !important; /* Below dot */
+    transform: translateX(-50%) !important;
+    max-width: 220px;
+    text-align: center;
+  }
+
+
+.mobile-tooltip2 {
+    position: absolute !important;
+    right: 50%!important;
+    top: 1.8rem !important;
+    transform: translateX(0%) !important;
+    max-width: 220px;
+    text-align: center;
+}
+}
+

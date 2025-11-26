@@ -154,12 +154,37 @@ export default function Orders() {
                 </thead>
                 <tbody className="main-card-box-row">
                   {orders.map((order) => (
-                    <tr key={order.id} className="border-t">
+                    <tr key={order.id} className="border-t order-done-tr">
                       <td
                         className="px-3 py-2 font-medium"
                         data-label="Order ID"
                       >
-                        #{order.id}
+                      <div className="flex gap-1 items-center">
+                        <div className="relative group inline-block">
+  <div className="w-3 h-3 bg-[#c81a1f] rounded-full animate-pulse"></div>
+
+  {/* Tooltip */}
+  <div
+    className="
+      invisible opacity-0 group-hover:visible group-hover:opacity-100
+      transition
+      fixed md:fixed  /* desktop */
+      px-3 py-2 max-w-xs text-sm
+      bg-black text-white rounded shadow
+      pointer-events-none
+      z-[9999]
+
+      /* mobile reset */
+      md:left-auto md:top-auto
+      md:transform-none
+      mobile-tooltip
+    "
+    data-tooltip
+  >
+    Payment remains unmarked, and the order is older than 72 hours.
+  </div>
+</div> #{order.id}
+                        </div>
                       </td>
                       <td className="px-3 py-2" data-label="Form Title">
                         {order?.form?.form_title} (ID:#{order?.form?.id})

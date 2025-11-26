@@ -305,8 +305,39 @@ export default function ViewOrder() {
             <p className="text-black mt-1">Order #{order.id}</p>
             <p className="text-black mt-1">{event_info.showName}</p>
           </div>
-          <div className="mt-4 md:mt-0 flex space-x-3">
+          <div className="mt-4 md:mt-0 flex space-x-3 items-center">
+
+             <div className="relative group inline-block">
+  {/* Trigger Dot */}
+  <div className="w-3 h-3 bg-[#c81a1f] rounded-full animate-pulse"></div>
+
+  {/* Tooltip */}
+  <div className="
+      absolute left-1/2 top-0
+      -translate-x-1/2 -translate-y-full
+
+      w-max max-w-xs
+      px-3 py-2
+      text-sm text-white
+      bg-black rounded shadow
+
+      opacity-0 group-hover:opacity-100
+      transition-all duration-200
+
+      pointer-events-none
+      whitespace-normal text-center
+
+      /* FULLY RESPONSIVE */
+      mobile-tooltip2
+    "
+  >
+    Payment remains unmarked, and the order is older than 72 hours.
+  </div>
+</div>
+             
             {showMarkPaymentButton && (
+
+              
               <button
                 onClick={() => setShowMarkPaymentPopup(true)}
                 disabled={markPaymentLoading}
