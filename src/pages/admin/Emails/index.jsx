@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FiEye, FiX } from "react-icons/fi";
+import { FiEye, FiX, FiRefreshCw } from "react-icons/fi";
 import apiClient from "../../../apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,6 +10,7 @@ export default function EmailLogsPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [resendingEmail, setResendingEmail] = useState(false);
   
   // Filters - removed email_type and search
   const [filters, setFilters] = useState({
@@ -85,6 +86,33 @@ export default function EmailLogsPage() {
       case 'failed': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Resend email function
+  const handleResendEmail = async (emailLogId) => {
+    try {
+      setResendingEmail(true);
+      const response = await apiClient.post('/api/orders/resend-email', {
+        email_log_id: emailLogId
+      });
+
+      if (response.data.success) {
+        toast.success('Email resent successfully!');
+        // Refresh the logs to get updated status
+        
+        // Close the modal
+        
+      } else {
+        toast.error(response.data.error || 'Failed to resend email');
+      }
+    } catch (error) {
+      console.error('Resend email error:', error);
+      toast.error(error.response?.data?.error || 'Failed to resend email');
+    } finally {
+      setResendingEmail(false);
+      setShowViewModal(false);
+      fetchEmailLogs(1);
     }
   };
 
@@ -309,10 +337,12 @@ export default function EmailLogsPage() {
                 <p className="mt-1 text-black">{formatDate(selectedLog.created_at)}</p>
               </div>
 
-              {selectedLog.user && (
+              {selectedLog.email_type && (
                 <div>
-                  <label className="block text-base font-medium text-black">User</label>
-                  <p className="mt-1 text-black">{selectedLog.user.name} ({selectedLog.user.email})</p>
+                  <label className="block text-base font-medium text-black">Email Type</label>
+                  <p className="mt-1 text-black capitalize">
+                    {selectedLog.email_type.replace(/_/g, ' ')}
+                  </p>
                 </div>
               )}
 
@@ -350,7 +380,32 @@ export default function EmailLogsPage() {
               </div>
             )}
             
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-3">
+              {/* Resend Email Button - Only show for failed emails or if you want to allow resending any email */}
+              {(selectedLog.status === 'failed' || true) && ( // Remove "|| true" if you only want to show for failed emails
+                <button
+                  onClick={() => handleResendEmail(selectedLog.id)}
+                  disabled={resendingEmail}
+                  className={`px-4 py-2 rounded font-medium flex items-center gap-2 ${
+                    resendingEmail 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {resendingEmail ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                      Resending...
+                    </>
+                  ) : (
+                    <>
+                      <FiRefreshCw size={16} />
+                      Resend Email
+                    </>
+                  )}
+                </button>
+              )}
+              
               <button
                 onClick={() => setShowViewModal(false)}
                 className="px-4 py-2 rounded bg-black hover:bg-gray-900 text-white font-medium"

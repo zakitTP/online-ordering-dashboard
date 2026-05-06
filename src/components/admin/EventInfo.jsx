@@ -13,25 +13,32 @@ const EventInfo = ({ formData, onInputChange, setFormData }) => {
   }, [formData.companyLogo]);
 
   // ✅ Handle logo upload with inline error
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-     if (!file) return;
-    if (!file.type.match("image.*")) {
-      setLogoError("Please select an image file!");
-      e.target.value = "";
-      return;
-    }
-    if (file) {
-      const maxSize = 5 * 1024 * 1024; // 5 MB
-      if (file.size > maxSize) {
-        setLogoError("File size must be less than 5 MB");
-        e.target.value = ""; // Reset input
-        return;
-      }
-      setLogoError("");
-      onInputChange(e);
-    }
-  };
+ // ... inside EventInfo component
+
+  // ✅ Handle logo upload with inline error
+const handleLogoChange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Validate type (This is tricky, but worth checking common image types)
+  if (!file.type.startsWith("image/") || (!file.type.includes("jpg") && !file.type.includes("jpeg") && !file.type.includes("png") && !file.type.includes("webp"))) {
+    // Note: This client-side check is not foolproof against camera types like 'image/heic'
+    setLogoError("Please select a JPEG, PNG, or WebP image file!");
+    return;
+  }
+
+  // Validate size - **MATCH THIS TO YOUR LARAVEL LIMIT!**
+  // Laravel limit is 2048 KB (2MB)
+  const maxSize = 5126 * 1024; // 2 MB (Original was 5 MB, causing mismatch)
+  if (file.size > maxSize) {
+    setLogoError("File size must be less than 2 MB. Please resize the image.");
+    return;
+  }
+
+  // ✅ Valid file
+  setLogoError("");
+  onInputChange(e);
+};
 
   // ✅ Handle room input changes
   const handleRoomChange = (index, value) => {
@@ -134,55 +141,16 @@ useEffect(() => {
 
   return (
     <>
-      {/* Company Information */}
-      <h3 className="font-bold text-2xl mb-4">Company Information</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-base lg:text-lg text-black font-medium">
-            Company Name
-          </label>
-          <input
-            name="companyName"
-            value={formData.companyName}
-            onChange={onInputChange}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-3"
-            placeholder="Company Inc."
-          />
-        </div>
 
-        <div>
-          <label className="text-base lg:text-lg text-black font-medium">
-            Company Logo
-          </label>
-          {logoError && <p className="text-red-500 text-sm mt-1">{logoError}</p>}
-          <div className="mt-1 flex items-center gap-3">
-            {(logoPreview || formData?.companyLogoUrl) && (
-              <img
-                src={logoPreview || formData.companyLogoUrl}
-                alt="Company Logo"
-                className="h-12 w-12 object-contain border rounded"
-              />
-            )}
-
-            <input
-              type="file"
-              name="companyLogo"
-              accept="image/*"
-              onChange={handleLogoChange} // ✅ custom handler
-              className="w-full rounded border border-slate-300 px-3 py-3 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-slate-100 file:text-slate-700"
-            />
-          </div>
-        </div>
-      </div>
 
       {/* Show Information */}
-      <h3 className="font-bold text-2xl mt-6 mb-4">Show Information</h3>
+      <h3 className="font-bold text-2xl mt-6 mb-4">Event Information</h3>
       {dateError && <p className="text-red-500 text-sm mb-2">{dateError}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-base lg:text-lg text-black font-medium">
-            Show Name
+            Tradeshow Name
           </label>
           <input
             name="showName"
@@ -192,7 +160,36 @@ useEffect(() => {
             placeholder="Show name"
           />
         </div>
+
         <div>
+          <label className="text-base lg:text-lg text-black font-medium">
+                Trade Show Logo
+              </label>
+              {logoError && <p className="text-red-500 text-sm mt-1">{logoError}</p>}
+              <div className="mt-1 flex items-center gap-3">
+                {(logoPreview || formData?.companyLogoUrl) && (
+                  <img
+                    src={logoPreview || formData.companyLogoUrl}
+                    alt="Company Logo"
+                    className="h-12 w-12 object-contain border rounded"
+                  />
+                )}
+
+                <input
+                  type="file"
+                  name="companyLogo"
+                  accept="image/*"
+                  onChange={handleLogoChange} // ✅ custom handler
+                  className="w-full rounded border border-slate-300 px-3 py-3 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-slate-100 file:text-slate-700"
+                />
+              </div>
+            </div>
+            
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+     
+        <div className="md:col-span-2">
           <label className="text-base lg:text-lg text-black font-medium">
             Facility
           </label>

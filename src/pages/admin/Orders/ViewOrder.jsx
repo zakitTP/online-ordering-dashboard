@@ -15,18 +15,41 @@ import {
   FaCalendarAlt,
   FaIdCard,
   FaCheckCircle,
+  FaCheck,
 } from "react-icons/fa";
 
-const formatCurrency = (val) => {
-  // Convert to number safely
-  const num = parseFloat(val);
+const formatCurrency = (amount) => {
+  const numericAmount = parseFloat(amount);
 
-  // If not a valid number, return 0.00
-  if (isNaN(num)) return "0.00";
-
-  // Always return fixed 2 decimal places
-  return num.toFixed(2);
+  return isNaN(numericAmount)
+    ? "CAD 0.00"
+    : numericAmount.toLocaleString("en-CA", {
+        style: "currency",
+        currency: "CAD",
+        currencyDisplay: "code", // shows CAD instead of $
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 };
+const formatToMDY = (dateString) => {
+  if (!dateString) return "N/A";
+
+  let cleanDate = dateString;
+
+  // Handle: 2026-01-22T23:54:02Z
+  if (dateString.includes("T")) {
+    cleanDate = dateString.split("T")[0];
+  }
+  // Handle: 2026-01-22 23:54:00
+  else if (dateString.includes(" ")) {
+    cleanDate = dateString.split(" ")[0];
+  }
+
+  const [year, month, day] = cleanDate.split("-");
+
+  return `${Number(month)}/${Number(day)}/${year}`;
+};
+
 
 export default function ViewOrder() {
   const { id } = useParams();
@@ -38,29 +61,29 @@ export default function ViewOrder() {
   const [sendNotification, setSendNotification] = useState(true);
   const [refundAmount, setRefundAmount] = useState(0);
   const [refundNote, setRefundNote] = useState("");
-  
+
   // New state for mark payment modal
   const [showMarkPaymentPopup, setShowMarkPaymentPopup] = useState(false);
   const [markPaymentLoading, setMarkPaymentLoading] = useState(false);
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
   const [paymentMemo, setPaymentMemo] = useState("");
-  
+
   const { user } = useSelector((state) => state.user);
   console.log(order);
-  
+
   // Check if user can process refund
   const canProcessRefund = () => {
     // Super admin has full access
     if (user?.role === "super admin") {
       return true;
     }
-    
+
     // For other roles, check refund_access permission
     if (user?.refund_access == 1) {
       return true;
     }
-    
+
     return false;
   };
 
@@ -113,6 +136,7 @@ export default function ViewOrder() {
         amount: parseFloat(refundAmount),
         note: refundNote,
         notify_customer: sendNotification,
+        refund_type: refundType,
       });
 
       if (response.status === 200) {
@@ -259,19 +283,28 @@ export default function ViewOrder() {
   const subtotal = order_detail?.subtotal || 0;
   const consumablesTotal = order_detail?.consumablesTotal || 0;
   const tax_breakdown = order_detail?.tax_breakdown || "";
-  
+
   // Payment type handling
   const paymentType = order?.payment_type || "card";
   const getPaymentTypeDisplay = () => {
     switch (paymentType) {
       case "pay_later":
         return "Pay Later";
-      case "card":
-        return "Card";
+
+      case "card": {
+        const brand =
+          order?.transaction_detail?.payment_method_details?.card?.brand?.toUpperCase();
+
+        return brand ? `${brand} Card` : "Card";
+      }
+
       case "marked_paid":
         return "Marked as Paid";
+
       default:
-        return paymentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        return paymentType
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
     }
   };
 
@@ -279,10 +312,16 @@ export default function ViewOrder() {
   const isRefunded = status === "refunded";
 
   // Check if refund button should be shown - only for card payments
-  const showRefundButton = canProcessRefund() && status === "completed" && !isRefunded && paymentType === "card";
+  const showRefundButton =
+    canProcessRefund() &&
+    status === "completed" &&
+    !isRefunded &&
+    paymentType?.trim().toLowerCase() === "card";
+
 
   // Check if mark payment button should be shown
-  const showMarkPaymentButton = status === "pending" && paymentType === "pay_later";
+  const showMarkPaymentButton =
+    status === "pending" && paymentType === "pay_later";
 
   return (
     <div className="md:p-4 p-0 ">
@@ -306,13 +345,15 @@ export default function ViewOrder() {
             <p className="text-black mt-1">{event_info.showName}</p>
           </div>
           <div className="mt-4 md:mt-0 flex space-x-3 items-center">
+            <div className="relative group inline-block">
+              {order?.expiry_payment_time && (
+                <>
+                  {/* Trigger Dot */}
+                  <div className="w-3 h-3 bg-[#c81a1f] rounded-full animate-pulse"></div>
 
-             <div className="relative group inline-block">
-  {/* Trigger Dot */}
-  <div className="w-3 h-3 bg-[#c81a1f] rounded-full animate-pulse"></div>
-
-  {/* Tooltip */}
-  <div className="
+                  {/* Tooltip */}
+                  <div
+                    className="
       absolute left-1/2 top-0
       -translate-x-1/2 -translate-y-full
 
@@ -330,14 +371,23 @@ export default function ViewOrder() {
       /* FULLY RESPONSIVE */
       mobile-tooltip2
     "
-  >
-    Payment remains unmarked, and the order is older than 72 hours.
-  </div>
-</div>
-             
-            {showMarkPaymentButton && (
+                  >
+                    Payment remains unmarked, and the order is older than 72
+                    hours.
+                  </div>
+                </>
+              )}
+            </div>
+            {status === "completed" && paymentType == "pay_later" && (
+              <div className="flex items-center !ml-0 ">
+                <FaCheck className="mr-2  text-white bg-green-500 p-2 h-8 w-8 text-center rounded-full border border-white" />{" "}
+                <span className="text-green-500 font-semibold">
+                  Payment Received
+                </span>
+              </div>
+            )}
 
-              
+            {showMarkPaymentButton && (
               <button
                 onClick={() => setShowMarkPaymentPopup(true)}
                 disabled={markPaymentLoading}
@@ -383,15 +433,22 @@ export default function ViewOrder() {
               <div className="flex justify-between">
                 <span>Date:</span>
                 <span className="font-medium">
-                  {new Date(order.created_at).toLocaleDateString()}
+               {formatToMDY(order.created_at)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Status:</span>
+                <span className="mr-2">Status:</span>
                 <span
                   className={`capitalize font-medium status-badge status-${status}`}
                 >
-                  {status}
+                  {paymentType == "pay_later" && status == "pending"
+                    ? "Awaiting payment"
+                    : status}
+       {paymentType === "card" &&
+  status === "failed" &&
+  order?.transaction_detail?.failure_message && (
+    ` (${order.transaction_detail.failure_message.replace(/\.$/, "")})`
+  )}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -400,55 +457,69 @@ export default function ViewOrder() {
               </div>
               <div className="flex justify-between">
                 <span>Amount:</span>
-                <span className="font-medium">${total_amount}</span>
+                <span className="font-medium">
+                  {formatCurrency(total_amount)}
+                </span>
               </div>
-              
+
               {/* Show transaction details only for card payments */}
-              {paymentType === "card" && order?.transaction_detail?.balance_transaction_id && (
+              {/* {paymentType === "card" && order?.transaction_detail?.balance_transaction_id && (
                 <div className="flex justify-between">
                   <span>Transaction Id:</span>
                   <span className="font-medium">
                     {order?.transaction_detail?.balance_transaction_id}
                   </span>
                 </div>
-              )}
-              
-              {/* Show reference ID only for card payments */}
-              {paymentType === "card" && order?.transaction_detail?.charge_id && (
-                <div className="flex justify-between">
-                  <span>Ref Id:</span>
-                  <span className="font-medium">
-                    {order?.transaction_detail?.charge_id}
-                  </span>
-                </div>
-              )}
-              
-              {/* Show payment reference for marked payments */}
-              {paymentType === "pay_later" && order?.transaction_detail?.reference_number && (
-                <div className="flex justify-between">
-                  <span>Payment Reference:</span>
-                  <span className="font-medium">
-                    {order?.transaction_detail?.reference_number}
-                  </span>
-                </div>
-              )}
-              
-              {/* Show payment date for marked payments */}
-              {paymentType === "pay_later" && order?.transaction_detail?.marked_paid_at && (
-                <div className="flex justify-between">
-                  <span>Payment Date:</span>
-                  <span className="font-medium">
-                    {new Date( order?.transaction_detail?.marked_paid_at).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
+              )} */}
 
-              {paymentType === "pay_later" && order?.transaction_detail?.memo && (
+              {/* Show reference ID only for card payments */}
+              {paymentType === "card" &&
+                order?.transaction_detail?.charge_id && (
+                  <div className="flex justify-between">
+                    <span>Ref Id:</span>
+                    <span className="font-medium">
+                      {order?.transaction_detail?.charge_id}
+                    </span>
+                  </div>
+                )}
+
+              {/* Show payment reference for marked payments */}
+              {paymentType === "pay_later" &&
+                order?.transaction_detail?.reference_number && (
+                  <div className="flex justify-between">
+                    <span>Payment Reference:</span>
+                    <span className="font-medium">
+                      {order?.transaction_detail?.reference_number}
+                    </span>
+                  </div>
+                )}
+
+              {/* Show payment date for marked payments */}
+              {paymentType === "pay_later" &&
+                order?.transaction_detail?.marked_paid_at && (
+                  <div className="flex justify-between">
+                    <span>Payment Date:</span>
+                    <span className="font-medium">
+                      {new Date(
+                        order?.transaction_detail?.marked_paid_at
+                      ).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+
+              {paymentType === "pay_later" &&
+                order?.transaction_detail?.memo && (
+                  <div className="flex justify-between">
+                    <span>Memo:</span>
+                    <span className="font-medium">
+                      {order?.transaction_detail?.memo}
+                    </span>
+                  </div>
+                )}
+              {clientData?.note && (
                 <div className="flex justify-between">
-                  <span>Memo:</span>
-                  <span className="font-medium">
-                    {order?.transaction_detail?.memo}
-                  </span>
+                  <span>Order Note:</span>
+                  <span className="font-medium">{clientData?.note}</span>
                 </div>
               )}
             </div>
@@ -534,7 +605,7 @@ export default function ViewOrder() {
                   </label>
                   <div className="flex justify-center items-center gap-2 bg-green-50 text-green-800 px-4 py-2 rounded-lg border border-green-200 text-center">
                     <span className="font-semibold">
-                      {refund_detail.amount}
+                      {formatCurrency(refund_detail.amount)}
                     </span>
                   </div>
                 </div>
@@ -561,7 +632,7 @@ export default function ViewOrder() {
                       />
                     </svg>
                     <span className="font-medium">
-                      {new Date(refund_detail.created_at).toLocaleDateString()}
+                      {formatToMDY(refund_detail.created_at)}
                     </span>
                   </div>
                 </div>
@@ -654,13 +725,13 @@ export default function ViewOrder() {
                         {quantities[p.id] || 1}
                       </td>
                       <td className="px-4 py-3" data-label="Price">
-                        ${p.prepaid_price}
+                        {formatCurrency(p.prepaid_price)}
                       </td>
                       <td className="px-4 py-3" data-label="Days">
                         {rental_days}
                       </td>
                       <td className="px-4 py-3" data-label="Total">
-                        ${total.toFixed(2)}
+                        {formatCurrency(total.toFixed(2))}
                       </td>
                     </tr>
                   );
@@ -670,82 +741,80 @@ export default function ViewOrder() {
           </div>
 
           {/* Totals */}
-         <div className="mt-4 pt-4 border-t space-y-2">
+          <div className="mt-4 pt-4 border-t space-y-2">
+            {equipmentTotal > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">Equipment Total</span>
+                <span>{formatCurrency(equipmentTotal)}</span>
+              </div>
+            )}
 
-  {equipmentTotal > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">Equipment Total</span>
-      <span>${formatCurrency(equipmentTotal)}</span>
-    </div>
-  )}
+            {labourCharge > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">Labour Charge</span>
+                <span>{formatCurrency(labourCharge)}</span>
+              </div>
+            )}
 
-  {labourCharge > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">Labour Charge</span>
-      <span>${formatCurrency(labourCharge)}</span>
-    </div>
-  )}
+            {combinedLabour > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">
+                  Additional Large Monitor / Kiosk / Wall Mount + Screen Labour
+                </span>
+                <span>{formatCurrency(combinedLabour)}</span>
+              </div>
+            )}
 
-  {combinedLabour > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">
-        Additional Large Monitor / Kiosk / Wall Mount + Screen Labour
-      </span>
-      <span>${formatCurrency(combinedLabour)}</span>
-    </div>
-  )}
+            {insurance > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">Insurance</span>
+                <span>{formatCurrency(insurance)}</span>
+              </div>
+            )}
 
-  {insurance > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">Insurance</span>
-      <span>${formatCurrency(insurance)}</span>
-    </div>
-  )}
+            {consumablesTotal > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">Consumables</span>
+                <span>{formatCurrency(consumablesTotal)}</span>
+              </div>
+            )}
 
-  {consumablesTotal > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">Consumables</span>
-      <span>${formatCurrency(consumablesTotal)}</span>
-    </div>
-  )}
+            {adminFees > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">Admin Fees</span>
+                <span>{formatCurrency(adminFees)}</span>
+              </div>
+            )}
 
-  {adminFees > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">Admin Fees</span>
-      <span>${formatCurrency(adminFees)}</span>
-    </div>
-  )}
+            {deliveryPickup > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">Delivery/Pickup</span>
+                <span>{formatCurrency(deliveryPickup)}</span>
+              </div>
+            )}
 
-  {deliveryPickup > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">Delivery/Pickup</span>
-      <span>${formatCurrency(deliveryPickup)}</span>
-    </div>
-  )}
+            {subtotal > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">Subtotal</span>
+                <span>{formatCurrency(subtotal)}</span>
+              </div>
+            )}
 
-  {subtotal > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">Subtotal</span>
-      <span>${formatCurrency(subtotal)}</span>
-    </div>
-  )}
+            {taxes > 0 && (
+              <div className="flex justify-between">
+                <span className="text-black font-medium">
+                  Taxes {Object.keys(tax_breakdown).join(", ")}
+                </span>
+                <span>{formatCurrency(taxes)}</span>
+              </div>
+            )}
 
-  {taxes > 0 && (
-    <div className="flex justify-between">
-      <span className="text-black font-medium">
-        Taxes {Object.keys(tax_breakdown).join(", ")}
-      </span>
-      <span>${formatCurrency(taxes)}</span>
-    </div>
-  )}
-
-  {/* Total Payment always shows */}
-  <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t">
-    <span>Total Payment (CAD)</span>
-    <span>${formatCurrency(total_amount)}</span>
-  </div>
-</div>
-
+            {/* Total Payment always shows */}
+            <div className="flex justify-between text-xl font-bold mt-3 pt-3 border-t">
+              <span>Total Payment (CAD)</span>
+              <span>{formatCurrency(total_amount)}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -759,7 +828,9 @@ export default function ViewOrder() {
                   Mark Payment as Completed
                 </h3>
                 <button
-                  onClick={() => !markPaymentLoading && setShowMarkPaymentPopup(false)}
+                  onClick={() =>
+                    !markPaymentLoading && setShowMarkPaymentPopup(false)
+                  }
                   disabled={markPaymentLoading}
                   className="text-brand-600 text-xl hover:text-gray-700 disabled:opacity-50"
                 >
@@ -824,11 +895,15 @@ export default function ViewOrder() {
                     </div>
                     <div className="flex justify-between">
                       <span>Order Total:</span>
-                      <span className="font-medium">${total_amount}</span>
+                      <span className="font-medium">
+                        {formatCurrency(total_amount)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Customer:</span>
-                      <span className="font-medium">{companyInfo.companyName}</span>
+                      <span className="font-medium">
+                        {companyInfo.companyName}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -903,36 +978,29 @@ export default function ViewOrder() {
                       Refund Amount
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500">
-                        $
-                      </span>
+              
                       <input
                         type="number"
                         max={total_amount}
                         value={refundAmount}
                         onChange={(e) => {
-                          let val = e.target.value;
+                          const val = e.target.value;
 
-                          // Allow clearing the field
+                          // Allow clearing field
                           if (val === "") {
-                            setRefundAmount("");
+                            setRefundAmount(0);
                             return;
                           }
 
-                          // Remove leading zeros except for "0." (like 0.5)
-                          if (/^0+[0-9]/.test(val)) {
-                            val = val.replace(/^0+/, "");
-                          }
-
-                          // Convert to float for validation
                           let numVal = parseFloat(val);
+
                           if (isNaN(numVal) || numVal < 0) numVal = 0;
                           if (numVal > total_amount) numVal = total_amount;
 
-                          setRefundAmount(val);
+                          setRefundAmount(numVal);
                         }}
                         disabled={refundLoading || refundType === "full"}
-                        className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
+                        className="w-full pl-3 pr-3 py-2 border border-gray-300 rounded-md disabled:opacity-50"
                       />
                     </div>
                   </div>
@@ -959,16 +1027,18 @@ export default function ViewOrder() {
                   <div className="space-y-2 text-base">
                     <div className="flex justify-between">
                       <span>Original Amount:</span>
-                      <span>${total_amount}</span>
+                      <span>{formatCurrency(total_amount)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Refund Amount:</span>
-                      <span className="font-medium">${refundAmount}</span>
+                      <span className="font-medium">
+                        {formatCurrency(refundAmount)}
+                      </span>
                     </div>
                     <div className="flex justify-between border-t pt-2 mt-2">
                       <span>Remaining Balance:</span>
                       <span className="font-medium text-black">
-                        ${(total_amount - refundAmount).toFixed(2)}
+                        {formatCurrency(total_amount - refundAmount)}
                       </span>
                     </div>
                   </div>

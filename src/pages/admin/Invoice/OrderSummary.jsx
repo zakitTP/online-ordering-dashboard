@@ -1,5 +1,17 @@
 import React from "react";
+const formatCurrency = (amount) => {
+  const numericAmount = parseFloat(amount);
 
+  return isNaN(numericAmount)
+    ? "CAD 0.00"
+    : numericAmount.toLocaleString("en-CA", {
+        style: "currency",
+        currency: "CAD",
+        currencyDisplay: "code", // shows CAD instead of $
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+};
 export default function OrderSummary({ page, nextStep, clientData, formData }) {
   const {rental_days = 4, is_prepaid = true} = formData
   const { equipmentSelection = {} } = clientData;
@@ -14,7 +26,7 @@ export default function OrderSummary({ page, nextStep, clientData, formData }) {
     tax = rawTax;
   }
   console.log(tax)
-
+let delivery = formData?.other_settings?.charges?.delivery || 200;
   const getProductById = (id) =>
     formData.products?.find((p) => p.id === id) || {};
 
@@ -42,7 +54,7 @@ export default function OrderSummary({ page, nextStep, clientData, formData }) {
   };
   const labourCharge = noSelection ? 0 : calculateLabour(equipmentTotal);
 
-  const insurance = noSelection ? 0 : equipmentTotal * 0.05;
+  const insurance = noSelection ? 0 : equipmentTotal * 0.03;
 
   // ✅ Consumables (1%)
   const consumablesTotal = noSelection
@@ -74,11 +86,11 @@ export default function OrderSummary({ page, nextStep, clientData, formData }) {
   const mountLabour = noSelection ? 0 : mountingRequired ? 160 : 0;
   const combinedLabour = mountLabour + extraLabourTotal;
 
-  const deliveryPickup = noSelection ? 0 : 150;
+  const deliveryPickup =  noSelection ? 0 : Number(delivery);
 
   const adminFees = noSelection
     ? 0
-    : (equipmentTotal + labourCharge + deliveryPickup) * 0.03;
+    : (equipmentTotal + labourCharge + combinedLabour) * 0.03;
 
   const subtotal =
     equipmentTotal +
@@ -100,28 +112,28 @@ export default function OrderSummary({ page, nextStep, clientData, formData }) {
 
   const totalPayment = subtotal + taxes;
 
-  return (
-    <aside className="lg:col-span-4 space-y-4 sm-screen-sidebar">
-      <div className="rounded-2xl bg-white  bg-[#F6F6F6] p-3 md:p-4 xl:p-6 rounded-xl side-bar-box-2 lg:sticky lg:top-4 side-bar-box">
-        <div className="bg-[#F6F6F6] p-3 md:p-4 lg:p-3 xl:p-6 rounded-xl side-bar-box-2">
-          <h3 className="text-xl lg:text-2xl md:text-[22px] font-bold text-black mb-6">
-            ORDER SUMMARY
+   return (
+    <aside className="lg:col-span-4 space-y-4 ">
+      <div className="rounded-2xl bg-white bg-[#fff] pb-6 rounded-xl  order-summary-sidebar-box">
+        <div className="bg-[#fff] rounded-xl  order-summary-sidebar-box-2">
+          <h3 className="text-xl font-semibold mb-6 bg-black text-white rounded-t">
+            Order Summary
           </h3>
 
-          <dl className="mt-4 space-y-6 text-base md:text-lg tabular-nums">
-            <div className="flex items-start justify-between">
-              <dt className="text-black detail-name-item">Equipment Rentals</dt>
+          <dl className=" space-y-3 text-base tabular-nums  order-summary-sidebar-box-2-details px-4">
+            <div className="flex items-start justify-between ">
+              <dt className="text-black detail-name-item font-bold">Equipment Rentals</dt>
               <dd className="text-black">${equipmentTotal.toFixed(2)}</dd>
             </div>
 
             <div className="flex items-start justify-between">
-              <dt className="text-black detail-name-item">Labour</dt>
+              <dt className="text-black detail-name-item font-bold">Labour</dt>
               <dd className="text-black">${labourCharge.toFixed(2)}</dd>
             </div>
 
             {combinedLabour > 0 && !noSelection && (
               <div className="flex items-start justify-between">
-                <dt className="text-black detail-name-item">
+                <dt className="text-black detail-name-item font-bold">
                   Additional Large<br className="hidden md:block" />
                   Monitor / Kiosk / Wall<br className="hidden md:block" />
                   Mount + Screen Labour
@@ -131,22 +143,22 @@ export default function OrderSummary({ page, nextStep, clientData, formData }) {
             )}
 
             <div className="flex items-start justify-between">
-              <dt className="text-black detail-name-item">Insurance</dt>
+              <dt className="text-black detail-name-item font-bold">Insurance</dt>
               <dd className="text-black">${insurance.toFixed(2)}</dd>
             </div>
 
             <div className="flex items-start justify-between">
-              <dt className="text-black detail-name-item">Consumables</dt>
+              <dt className="text-black detail-name-item font-bold">Consumables</dt>
               <dd className="text-black">${consumablesTotal.toFixed(2)}</dd>
             </div>
 
             <div className="flex items-start justify-between">
-              <dt className="text-black detail-name-item">Admin Fees</dt>
+              <dt className="text-black detail-name-item font-bold ">Admin Fees</dt>
               <dd className="text-black">${adminFees.toFixed(2)}</dd>
             </div>
 
             <div className="flex items-start justify-between">
-              <dt className="text-black detail-name-item">Delivery / Pickup</dt>
+              <dt className="text-black detail-name-item font-bold">Delivery / Pickup</dt>
               <dd className="text-black">${deliveryPickup.toFixed(2)}</dd>
             </div>
 
@@ -157,23 +169,23 @@ export default function OrderSummary({ page, nextStep, clientData, formData }) {
 
             {/* ✅ Show all dynamic taxes */}
             {taxEntries.map(([label, percent]) => (
-              <div key={label} className="flex items-start justify-between">
+              <div key={label} className="flex items-start justify-between  ">
                 <dt className="text-black detail-name-item">
                   {label} 
                 </dt>
                 <dd className="text-black">
-                  ${(subtotal * (Number(percent) / 100)).toFixed(2)}
+                  {formatCurrency((subtotal * (Number(percent) / 100)))}
                 </dd>
               </div>
             ))}
           </dl>
 
-          <div className="mt-6 flex items-center justify-between text-lg md:text-xl font-extrabold">
+          <div className="mt-6 flex items-center justify-between text-lg md:text-xl font-extrabold  px-4">
             <span className="text-black font-bold text-lg xl:text-[22px] total-text-title">
               Total (CAD) :
             </span>
             <span className="text-black font-bold text-xl xl:text-[22px]">
-               ${totalPayment.toFixed(2)}
+               {formatCurrency(totalPayment)}
             </span>
           </div>
 
@@ -192,6 +204,7 @@ export default function OrderSummary({ page, nextStep, clientData, formData }) {
             </button>
           )}
         </div>
+        
       </div>
     </aside>
   );

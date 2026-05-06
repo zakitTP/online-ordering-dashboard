@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { FaBan, FaPercent, FaReceipt, FaSliders, FaCircleCheck } from "react-icons/fa6";
+import { FaPercent, FaReceipt, FaSliders, FaCircleCheck } from "react-icons/fa6";
 
 const presetOptions = [
-  { key: "none", label: "No Tax", icon: FaBan, rate: 0 },
   { key: "ab_gst", label: "AB GST (5%)", icon: FaPercent, rate: 5 },
   { key: "bc_gst", label: "BC GST (5%)", icon: FaPercent, rate: 5 },
   { key: "gst_only", label: "GST ONLY (5%)", icon: FaPercent, rate: 5 },
@@ -21,68 +20,93 @@ const presetOptions = [
 ];
 
 const Taxes = ({ formData, setFormData, setTaxSelected }) => {
-  const [selectedKey, setSelectedKey] = useState("");
-  const [customName, setCustomName] = useState("Custom"); // ✅ Default "Custom"
-  const [customRate, setCustomRate] = useState("0"); // ✅ Default 0
+  const [selectedKey, setSelectedKey] = useState("hst_on"); // Default HST ON
+  const [customName, setCustomName] = useState("Custom");
+  const [customRate, setCustomRate] = useState("");
 
   const customNameRef = useRef(null);
   const customRateRef = useRef(null);
 
-  // Initialize selected tax from formData
+  // ---------- Initialize formData once on mount ----------
   useEffect(() => {
     const taxObj = formData.otherSettings?.tax || {};
     const taxEntries = Object.entries(taxObj);
 
     if (taxEntries.length === 0) {
-      setSelectedKey("none");
+      // Default: HST ON
+      const defaultOpt = presetOptions.find(opt => opt.key === "hst_on");
+      if (defaultOpt) {
+        setSelectedKey(defaultOpt.key);
+        setFormData(prev => ({
+          ...prev,
+          otherSettings: {
+            ...prev.otherSettings,
+            tax: { [defaultOpt.label]: defaultOpt.rate },
+          },
+        }));
+        setTaxSelected(true);
+      }
       return;
     }
 
     const [label, rate] = taxEntries[0];
-
     const preset = presetOptions.find((opt) => opt.label === label);
+
     if (preset) {
       setSelectedKey(preset.key);
+      setTaxSelected(true);
     } else {
       setSelectedKey("custom");
       setCustomName(label || "Custom");
-      setCustomRate(rate?.toString() || "0");
+      setCustomRate(rate?.toString() || "");
+      setTaxSelected(rate > 0 && label !== "");
     }
-  }, [formData.otherSettings?.tax]);
+  }, []);
 
-  // Focus custom name input only once when selected
+  // ---------- Focus on custom name input ----------
   useEffect(() => {
     if (selectedKey === "custom") {
       customNameRef.current?.focus();
     }
   }, [selectedKey]);
 
-  // Update formData whenever tax inputs change
+  // ---------- Update formData whenever selection changes ----------
   useEffect(() => {
-    if (!selectedKey) return;
-
-    if (selectedKey === "custom") {
-      const rate = parseFloat(customRate) || 0;
-      setFormData((prev) => ({
-        ...prev,
-        otherSettings: {
-          ...prev.otherSettings,
-          tax: { [customName || "Custom"]: rate },
-        },
-      }));
-    } else {
-      const opt = presetOptions.find((o) => o.key === selectedKey);
-      if (opt) {
-        const labelName = opt.key === "none" ? "none" : opt.label;
-        setFormData((prev) => ({
-          ...prev,
-          otherSettings: { ...prev.otherSettings, tax: { [labelName]: opt.rate ?? 0 } },
-        }));
-      }
+    if (!selectedKey) {
+      setTaxSelected(false);
+      return;
     }
 
-    setTaxSelected(true);
-  }, [selectedKey, customName, customRate, setFormData, setTaxSelected]);
+    if (selectedKey === "custom") {
+      const rate = parseFloat(customRate);
+      const valid = customName.trim() !== "" && !isNaN(rate) && rate > 0;
+      setTaxSelected(valid);
+
+      if (valid) {
+        setFormData(prev => ({
+          ...prev,
+          otherSettings: { ...prev.otherSettings, tax: { [customName]: rate } },
+        }));
+      }
+    } else if (selectedKey !== "none") {
+      const opt = presetOptions.find(o => o.key === selectedKey);
+      if (opt) {
+        setTaxSelected(true);
+        setFormData(prev => ({
+          ...prev,
+          otherSettings: { ...prev.otherSettings, tax: { [opt.label]: opt.rate } },
+        }));
+      }
+    } else {
+      // "none" selected
+      setTaxSelected(true);
+      setFormData(prev => ({
+        ...prev,
+        otherSettings: { ...prev.otherSettings, tax: { none: 0 } },
+      }));
+    }
+  }, [selectedKey, customName, customRate]);
+
 
  
 

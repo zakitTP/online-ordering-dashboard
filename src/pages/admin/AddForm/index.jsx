@@ -31,12 +31,10 @@ const AddForm = () => {
 
   const [formData, setFormData] = useState({
     formTitle: "",
-    tradeshowName: "",
     contactName: "",
     contactEmail: "",
     contactPhone: "",
     contactExt: "",
-    companyName: "",
     companyLogo: null,
     showName: "",
     facility: "",
@@ -50,7 +48,7 @@ const AddForm = () => {
     products: [],
     status: "",
     accessCode: "",
-    otherSettings: { tax: {}, charges: { delvery: 200 } },
+    otherSettings: { tax: {}, charges: { delvery: 200 },developer_mode:false },
   });
 
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -61,7 +59,7 @@ const AddForm = () => {
     accessCode: "",
     formUrl: "",
   });
-
+const site_url = import.meta.env.VITE_CLIENT_BASE_URL; 
   const handleInputChange = (e) => {
     const { name, value, files, type } = e.target;
     if (type === "file") {
@@ -78,9 +76,8 @@ const AddForm = () => {
       contactName: "Contact Name",
       contactEmail: "Contact Email",
       contactPhone: "Contact Phone",
-      companyName: "Company Name",
+       showName: "Tradeshow Name",
       companyLogo: "Company Logo",
-      showName: "Show Name",
       facility: "Facility",
       loadInDate: "Load In Date",
       loadInTime: "Load In Time",
@@ -112,9 +109,9 @@ const AddForm = () => {
       "contactName",
       "contactEmail",
       "contactPhone",
-      "companyName",
+           "showName",
       "companyLogo",
-      "showName",
+ 
       "facility",
       "loadInDate",
       "loadInTime",
@@ -163,7 +160,6 @@ const AddForm = () => {
       payload.append("contact_email", formData.contactEmail);
       payload.append("contact_phone", formData.contactPhone);
       payload.append("contact_ext", formData?.contactExt);
-      payload.append("company_name", formData.companyName);
 
       if (formData.companyLogo instanceof File) {
         payload.append("company_logo", formData.companyLogo);
@@ -175,7 +171,7 @@ const AddForm = () => {
         JSON.stringify({
           showName: formData.showName,
           facility: formData.facility,
-          rooms: formData.rooms, // ✅ Save as array - "build,kio" will be one value
+          rooms: formData.rooms.filter(room => room.trim() !== ""), // ✅ Save as array - "build,kio" will be one value
           loadInDate: formData.loadInDate,
           loadInTime: formData.loadInTime,
           startDate: formData.startDate,
@@ -207,7 +203,7 @@ const AddForm = () => {
         } successfully!`
       );
 
-      const formUrl = `https://av-canada.com/order/client/orderform/${savedForm.id}`;
+      const formUrl = `${site_url}/orderform/${savedForm.id}`;
       setModalContent({
         accessCode: savedForm.access_code || "",
         formUrl,
@@ -243,7 +239,7 @@ const AddForm = () => {
 
   const stepBtnBase =
     "step-tab w-full inline-flex items-center justify-center md:gap-3 gap-2 rounded px-1 md:px-3 py-2 text-base md:text-lg font-medium md:font-bold border border-slate-300";
-  const activeTab = "bg-brand-600 text-white";
+  const activeTab = "bg-[#c81a1f] text-white";
   const inactiveTab = "bg-white";
 
   return (
@@ -326,7 +322,7 @@ const AddForm = () => {
           className={`${activeStep === 1 ? "" : "screen-hidden hidden !mt-0"}`}
         >
           <h3 className="font-bold text-2xl mb-4">Form Details</h3>
-          <FormDetail formData={formData} onInputChange={handleInputChange} />
+          <FormDetail formData={formData} onInputChange={handleInputChange}  setFormData={setFormData} />
 
           <div className="flex items-center justify-end gap-3 mt-8 text-xl">
             <button

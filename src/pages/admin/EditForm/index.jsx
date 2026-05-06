@@ -34,16 +34,15 @@ const EditForm = () => {
 
   const [formData, setFormData] = useState({
     formTitle: "",
-    tradeshowName: "",
+
     contactName: "",
     contactEmail: "",
     contactPhone: "",
     contactExt: "",
-    companyName: "",
     companyLogo: null,
     showName: "",
     facility: "",
-    rooms: [], // Initialize as empty array like AddForm
+    rooms: [], 
     loadInDate: "",
     loadInTime: "",
     startDate: "",
@@ -53,7 +52,7 @@ const EditForm = () => {
     products: [],
     status: "",
     accessCode: "",
-    otherSettings: { tax: {}, charges: { delvery: 200 } }, // Match AddForm structure
+    otherSettings: { tax: {}, charges: { delvery: 200 },developer_mode:false }, 
   });
 
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -62,7 +61,7 @@ const EditForm = () => {
     accessCode: "",
     formUrl: "",
   });
-
+const site_url = import.meta.env.VITE_CLIENT_BASE_URL; 
   // Fetch existing form
   useEffect(() => {
     setLoading(true);
@@ -139,7 +138,7 @@ const EditForm = () => {
           contactEmail: data.contact_email || "",
           contactPhone: data.contact_phone || "",
           contactExt: data.contact_ext || "",
-          companyName: data.company_name || "",
+
           companyLogo: data.company_logo || null,
           companyLogoUrl: data.company_logo_url || "",
           showName: eventInfo.showName || "",
@@ -176,15 +175,16 @@ const EditForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+
   const formatFieldName = (fieldName) => {
     const fieldNameMap = {
       formTitle: "Form Title",
       contactName: "Contact Name",
       contactEmail: "Contact Email",
       contactPhone: "Contact Phone",
-      companyName: "Company Name",
+   showName: "Tradeshow Name",
       companyLogo: "Company Logo",
-      showName: "Show Name",
+   
       facility: "Facility",
       loadInDate: "Load In Date",
       loadInTime: "Load In Time",
@@ -214,7 +214,7 @@ const EditForm = () => {
       "contactName",
       "contactEmail",
       "contactPhone",
-      "companyName",
+
       "showName",
       "facility",
       "loadInDate",
@@ -265,7 +265,6 @@ const EditForm = () => {
       payload.append("contact_email", formData.contactEmail);
       payload.append("contact_phone", formData.contactPhone);
       payload.append("contact_ext", formData.contactExt || "");
-      payload.append("company_name", formData.companyName);
 
       if (formData.companyLogo instanceof File) {
         payload.append("company_logo", formData.companyLogo);
@@ -277,7 +276,7 @@ const EditForm = () => {
         JSON.stringify({
           showName: formData.showName,
           facility: formData.facility,
-          rooms: formData.rooms, // Array format like AddForm
+          rooms: (formData.rooms || []).filter(room => room?.trim()),
           loadInDate: formData.loadInDate,
           loadInTime: formData.loadInTime,
           startDate: formData.startDate,
@@ -290,6 +289,7 @@ const EditForm = () => {
       payload.append("product_select", JSON.stringify(formData.products));
       payload.append("other_settings", JSON.stringify(formData.otherSettings));
       payload.append("status", status);
+
 
       const res = await apiClient.post(`/api/forms/${id}`, payload, {
         headers: {
@@ -310,7 +310,7 @@ const EditForm = () => {
         `Form ${status === "draft" ? "saved as draft" : "published"} successfully!`
       );
 
-      const formUrl = `https://av-canada.com/order/client/orderform/${id}`;
+      const formUrl = `${site_url}/orderform/${id}`;
       setModalContent({
         accessCode: updatedForm.access_code || "",
         formUrl,
@@ -318,7 +318,12 @@ const EditForm = () => {
       setModalVisible(true);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save form!");
+       const message =
+    err?.message ||
+    err?.response?.data?.message ||
+    JSON.stringify(err);
+
+  toast.error("Failed to save form: " + message);
     } finally {
       setSaving(false);
     }
@@ -346,13 +351,13 @@ const EditForm = () => {
 
   const stepBtnBase =
     "step-tab w-full inline-flex items-center justify-center md:gap-3 gap-2 rounded px-1 md:px-3 py-2 text-base md:text-lg font-medium md:font-bold border border-slate-300";
-  const activeTab = "bg-brand-600 text-white";
+  const activeTab = "bg-[#c81a1f]  text-white";
   const inactiveTab = "bg-white";
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#c81a1f] "></div>
       </div>
     );
   }
@@ -424,7 +429,7 @@ const EditForm = () => {
           className={`${activeStep === 1 ? "" : "screen-hidden hidden !mt-0"}`}
         >
           <h3 className="font-bold text-2xl mb-4">Form Details</h3>
-          <FormDetail formData={formData} onInputChange={handleInputChange} />
+          <FormDetail formData={formData} onInputChange={handleInputChange}  setFormData={setFormData} />
 
           <div className="flex items-center justify-end gap-3 mt-8 text-xl">
             <button

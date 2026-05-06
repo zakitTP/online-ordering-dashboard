@@ -36,21 +36,39 @@ const Invoice = forwardRef(({ order }, ref) => {
 
   // Helper functions
   const formatCurrency = (amount) => {
-    const numericAmount = parseFloat(amount);
-    return isNaN(numericAmount) ? "$0.00" : numericAmount.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    });
-  };
+  const numericAmount = parseFloat(amount);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  return isNaN(numericAmount)
+    ? "CAD 0.00"
+    : numericAmount.toLocaleString("en-CA", {
+        style: "currency",
+        currency: "CAD",
+        currencyDisplay: "code", // shows CAD instead of $
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+
+  let cleanDate = dateString;
+
+  if (dateString.includes("T")) {
+    cleanDate = dateString.split("T")[0];
+  } else if (dateString.includes(" ")) {
+    cleanDate = dateString.split(" ")[0];
+  }
+
+  const [year, month, day] = cleanDate.split("-");
+
+  const months = ["Jan","Feb","Mar","Apr","May","Jun",
+                  "Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  return `${months[Number(month) - 1]} ${Number(day)}, ${year}`;
+};
+
+
 
   const formatTransactionDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -80,8 +98,8 @@ const Invoice = forwardRef(({ order }, ref) => {
     order_detail = {},
     transaction_detail = {},
     clientData = {},
+       payment_type = "",
   } = order;
-
   const {
     taxes = 0,
     adminFees = 0,
@@ -198,21 +216,40 @@ const Invoice = forwardRef(({ order }, ref) => {
     return qty * price * days;
   };
 
-  const generatePDF = () => {
-    const element = document.getElementById("invoice-pdf");
-    if (!element) return;
+ const generatePDF = () => {
+  const element = document.getElementById("invoice-pdf");
+  if (!element) return;
 
-    html2pdf()
-      .set({
-        margin: 0,
-        filename: `invoice_${id || Date.now()}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "in", format: "a1", orientation: "portrait" },
-      })
-      .from(element)
-      .save();
+  const opt = {
+    margin: 0,
+    filename: `invoice_${id || Date.now()}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
   };
+
+  html2pdf()
+    .set(opt)
+    .from(element)
+    .toPdf()
+    .get("pdf")
+    .then((pdf) => {
+      const totalPages = pdf.internal.getNumberOfPages();
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+
+        pdf.setFontSize(10);
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pdf.internal.pageSize.getWidth() - 30, 
+          pdf.internal.pageSize.getHeight() - 10 
+        );
+      }
+    })
+    .save();
+};
+
 
   // Expose the function to parent
   useImperativeHandle(ref, () => ({
@@ -321,10 +358,10 @@ const Invoice = forwardRef(({ order }, ref) => {
     );
   };
 
-  return (
+ return (
     <div id="invoice-pdf" className="invoice-content">
       {/* Header */}
-      <header className="site-header pt-1  pb-6 max-h-[20vh]">
+      <header className="site-header mt-6 pt-1  pb-6 max-h-[15vh]">
         <div className="container container-pad">
           <div className="main-header-element">
             <div className="logo-col pdf-invoice-head-img">
@@ -359,14 +396,66 @@ const Invoice = forwardRef(({ order }, ref) => {
         </div>
       </header>
 
+      
+
       {/* Main Content */}
-      <main className="container container-pad">
+     <main className="container container-pad">
         <section className="page-block">
           <div className="section-shell">
             <div className="main-grid">
-              
-              {/* Left Column */}
-              <div className="main-col">
+              {payment_type === "pay_later" && status === "pending" && (
+                <>
+              <p className="text-center  font-bold underline underline-offset-8 leading-loose">Payments must be received within 72 hours</p>
+               <div className="card">
+                  <div className="card-head">Wire Transfer Detail</div>
+                  <div className="card-body">
+                    <div className="deflist">
+                      <div className="defrow">
+                        <div className="defterm">BANK:</div>
+                        <div className="defval">
+                          BANK OF MONTREAL — INTERNATIONAL BANKING,
+                          <br />
+                          863 BROWNS LINE AVENUE,
+                          <br />
+                          TORONTO, ONTARIO M8W 3V7
+                        </div>
+                      </div>
+
+                      <div className="defrow">
+                        <div className="defterm">ACCT. NAME:</div>
+                        <div className="defval">AV-CANADA INC.</div>
+                      </div>
+
+                      <div className="defrow">
+                        <div className="defterm">TYPE:</div>
+                        <div className="defval">CANADIAN FUNDS</div>
+                      </div>
+
+                      <div className="defrow">
+                        <div className="defterm">BANK CODE:</div>
+                        <div className="defval">001</div>
+                      </div>
+
+                      <div className="defrow">
+                        <div className="defterm">TRANSIT NO:</div>
+                        <div className="defval">03792</div>
+                      </div>
+
+                      <div className="defrow">
+                        <div className="defterm">ACCOUNT NO:</div>
+                        <div className="defval">1038-331</div>
+                      </div>
+
+                      <div className="defrow">
+                        <div className="defterm">SWIFT CODE:</div>
+                        <div className="defval">B0FMCAM2</div>
+                      </div>
+                    </div>
+                  </div>
+                </div> 
+                </>
+              )}
+             
                 {/* Order Details */}
                 <div className="card">
                   <div className="card-head">Order Details</div>
@@ -382,7 +471,7 @@ const Invoice = forwardRef(({ order }, ref) => {
                       </div>
                       <div className="defrow">
                         <div className="defterm">Payment Method :</div>
-                        <div className="defval">Card</div>
+                          <div>{payment_type == "pay_later" ? "Manual Payment" : "Card"}</div>
                       </div>
                       <div className="defrow">
                         <div className="defterm">Date :</div>
@@ -390,16 +479,55 @@ const Invoice = forwardRef(({ order }, ref) => {
                       </div>
                       <div className="defrow">
                         <div className="defterm">Status :</div>
-                        <div className="defval capitalize">{status}</div>
+                        <div className="defval capitalize">{payment_type == "pay_later" && status == "pending"  ? "Awaiting payment" : status}</div>
                       </div>
+                        {orderClientData?.note &&
+                      <div className="defrow">
+                        <div className="defterm">Order Note:</div>
+                        <div className="defval capitalize">{orderClientData?.note}</div>
+                      </div>
+}
                     </div>
                   </div>
                 </div>
 
+                
+                  <div className=" pb-0 pdf-design-summary card">
+                    <OrderSummary
+                      page={"payment"}
+                      clientData={orderClientData}
+                      formData={formData}
+                    />
+                  </div>
+
                 {/* Transaction Details */}
-                {Object.keys(transactionDetails).length > 0 && (
+                {Object.keys(transactionDetails).length > 0 && status != "pending" &&  (
                   <div className="card">
                     <div className="card-head">Transaction Details</div>
+                    {payment_type == "pay_later" ? 
+                      <div className="card-body">
+                      <div className="deflist">
+                          {transactionDetails?.payment_date && (
+                          <div className="defrow">
+                            <div className="defterm">Paid Date:</div>
+                            <div className="defval">{transactionDetails?.payment_date}</div>
+                          </div>
+                        )}
+                          {transactionDetails?.reference_number && (
+                          <div className="defrow">
+                            <div className="defterm">Reference Number:</div>
+                            <div className="defval">{transactionDetails?.reference_number}</div>
+                          </div>
+                        )}
+                          {transactionDetails?.memo && (
+                          <div className="defrow">
+                            <div className="defterm">Memo :</div>
+                            <div className="defval">{transactionDetails?.memo}</div>
+                          </div>
+                        )}
+                        </div>
+                      </div>
+                      :
                     <div className="card-body">
                       <div className="deflist">
                         {transactionDetails?.balance_transaction_id && (
@@ -438,6 +566,7 @@ const Invoice = forwardRef(({ order }, ref) => {
                         )}
                       </div>
                     </div>
+} 
                   </div>
                 )}
 
@@ -468,7 +597,7 @@ const Invoice = forwardRef(({ order }, ref) => {
 
                       <div className="info-right">
                         <div className="block-title">Contact Details</div>
-                              {rooms.length > 0 && (
+                                 {rooms.length > 0 && (
               rooms.map((room, index) => (
                  <div className="flex gap-2 company-info-details"><span className="font-semibold w-100">{room?.label} – Booth # : {room?.value}</span></div> 
               )))}
@@ -493,12 +622,12 @@ const Invoice = forwardRef(({ order }, ref) => {
                           <div className="help-title">NEED HELP ?</div>
                           <p style={{margin: '0 0 12px'}}>Quick support for all your needs.</p>
                           <div className="help-item mt-6">
-                            <FaPhone className="text-red-600" />
-                           <span className="-mt-4">{contact_phone} {contact_ext && contact_ext != 'null' ? `(ext. ${contact_ext})` : ""}</span>
+                            <FaPhone className="text-red-600 w-10" />
+                           <span className="-mt-4 break-all whitespace-normal  w-80">{contact_phone} {contact_ext && contact_ext != 'null'  ? `(ext. ${contact_ext})` : ""}</span>
                           </div>
-                          <div className="help-item mt-4">
-                            <FaEnvelope className="text-red-600" />
-                            <span className="-mt-4">{contact_email}</span>
+                          <div className="help-item mt-4 ">
+                            <FaEnvelope className="text-red-600 w-10" />
+                            <span className="-mt-4 break-all whitespace-normal w-80">{contact_email}</span>
                           </div>
                         </div>
                       </div>
@@ -515,14 +644,14 @@ const Invoice = forwardRef(({ order }, ref) => {
                         <h4 className="event-h">EVENT DETAILS</h4>
                         <div className="space-y-4">
                           <div>
-                            <p className="text-xl font-semibold text-black">Show Name</p>
+                            <p className="text-xl font-semibold text-black">Tradeshow Name</p>
                             <p className="text-[16px] text-black">{showName}</p>
                           </div>
                           <div>
                             <p className="text-xl font-semibold text-black">Facility</p>
                             <p className="text-[16px] text-black">{facility}</p>
                           </div>
-                      
+                       
                         </div>
                       </div>
 
@@ -566,7 +695,11 @@ const Invoice = forwardRef(({ order }, ref) => {
                 </div>
 
                 {/* Equipment Tables */}
-                {renderEquipmentTables()}
+                <div className="invoice-table-design card">
+                  {renderCategoryTable(categories.main, "Equipment Details")}
+                  {renderCategoryTable(categories.mounting, "Mounting Details")}
+                  {renderCategoryTable(categories.accessories, "Accessories Details")}
+                </div>
 
                 {/* Laptop Question */}
                 <div className="card">
@@ -599,21 +732,14 @@ const Invoice = forwardRef(({ order }, ref) => {
                   </div>
                 </div>
 
-              </div>
+             
 
               {/* Right Sidebar */}
-              <aside className="side-col sticky-lg">
-                <div className="side-card">
-                  <div className=" pb-0 pdf-design-summary ">
-                    <OrderSummary
-                      page={"payment"}
-                      clientData={orderClientData}
-                      formData={formData}
-                    />
-                  </div>
+             
+         
                   
                   {/* Transaction Receipt */}
-                  <div className="receipt p-6 !pt-0 ">
+                   <div className="receipt  card ">
                     <div className="receipt-box">
                       <h3 className="receipt-title">TRANSACTION RECEIPT</h3>
 
@@ -630,7 +756,7 @@ const Invoice = forwardRef(({ order }, ref) => {
 
                       <div className="kv">
                         <span>Entry Method:</span>
-                        <span>Online</span>
+                         <span>{payment_type == "pay_later" ? "Manual Payment" : "Online"}</span>
                       </div>
                       {transactionDetails.created && (
                         <>
@@ -650,14 +776,20 @@ const Invoice = forwardRef(({ order }, ref) => {
                           <span>{transactionDetails?.charge_id}</span>
                         </div>
                       )}
+                      
+                        <div className="kv">
+                          <span>Sales Tax #:</span>
+                          <span>R131538092</span>
+                        </div>
+                    
                       <div className="kv kv-total">
                         <strong>Total (CAD) :</strong>
                         <strong> {formatCurrency(totalAmount)}</strong>
                       </div>
                     </div>
                   </div>
-                </div>
-              </aside>
+            
+           
             </div>
           </div>
         </section>

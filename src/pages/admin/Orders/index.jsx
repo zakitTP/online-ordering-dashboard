@@ -13,7 +13,35 @@ import apiClient from "../../../apiClient";
 import { Link } from "react-router-dom";
 import Invoice from "../Invoice";
 import { useSelector } from "react-redux";
+const formatCurrency = (amount) => {
+  const numericAmount = parseFloat(amount);
 
+  return isNaN(numericAmount)
+    ? "CAD 0.00"
+    : numericAmount.toLocaleString("en-CA", {
+        style: "currency",
+        currency: "CAD",
+        currencyDisplay: "code", // shows CAD instead of $
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+};
+
+const formatToMDY = (dateString) => {
+  if (!dateString) return "N/A";
+
+  let cleanDate = dateString;
+
+  if (dateString.includes("T")) {
+    cleanDate = dateString.split("T")[0];
+  } else if (dateString.includes(" ")) {
+    cleanDate = dateString.split(" ")[0];
+  }
+
+  const [year, month, day] = cleanDate.split("-");
+
+  return `${Number(month)}/${Number(day)}/${year}`;
+};
 export default function Orders() {
   const invoiceRef = useRef();
   const [orders, setOrders] = useState([]);
@@ -83,7 +111,6 @@ export default function Orders() {
     setInvoiceOrder({ ...order });
   };
 
-  console.log(orders)
   return (
     <div id="orders" className="view !mt-0">
       <ToastContainer />
@@ -102,7 +129,7 @@ export default function Orders() {
                 setSearch(e.target.value);
                 setPage(1); // reset to page 1 when searching
               }}
-              placeholder="Search with Parnter Name, Order ID"
+              placeholder="Search with Trade Show Name, Order ID"
               className="w-full outline-none text-base md:text-lg"
             />
           </div>
@@ -119,6 +146,7 @@ export default function Orders() {
             <option>Completed</option>
             <option>Refunded</option>
             <option>Failed</option>
+            <option value={"payment_awaited"}>Awaiting Payment</option>
           </select>
         </div>
 
@@ -142,7 +170,7 @@ export default function Orders() {
                       Form Title
                     </th>
                     <th className="text-left font-medium px-3 py-2">
-                     Company (Client)
+                     Client Company
                     </th>
                     <th className="text-left font-medium px-3 py-2">Total</th>
                     <th className="text-left font-medium px-3 py-2">Status</th>
@@ -156,44 +184,40 @@ export default function Orders() {
                   {orders.map((order) => (
                     <tr key={order.id} className="border-t order-done-tr">
                       <td
-                        className="px-3 py-2 font-medium"
+                        className="px-6 py-2 font-medium"
                         data-label="Order ID"
                       >
                       <div className="flex gap-1 items-center">
-                        <div className="relative group inline-block">
-  <div className="w-3 h-3 bg-[#c81a1f] rounded-full animate-pulse"></div>
+                       <div className=" group inline-block">
+  {order?.expiry_payment_time && (
+    <>
+      <div className="w-3 h-3 bg-[#c81a1f] rounded-full animate-pulse md:-ml-3"></div>
 
-  {/* Tooltip */}
-  <div
-    className="
-      invisible opacity-0 group-hover:visible group-hover:opacity-100
-      transition
-      fixed md:fixed  /* desktop */
-      px-3 py-2 max-w-xs text-sm
-      bg-black text-white rounded shadow
-      pointer-events-none
-      z-[9999]
-
-      /* mobile reset */
-      md:left-auto md:top-auto
-      md:transform-none
-      mobile-tooltip
-    "
-    data-tooltip
-  >
-    Payment remains unmarked, and the order is older than 72 hours.
-  </div>
+      <div
+        className="
+          absolute 
+          invisible opacity-0 group-hover:visible group-hover:opacity-100
+          transition
+          px-3 py-2 max-w-xs text-sm
+          bg-black text-white rounded shadow
+          z-[9999]
+        "
+      >
+        Payment remains unmarked, and the order is older than 72 hours.
+      </div>
+    </>
+  )}
 </div> #{order.id}
                         </div>
                       </td>
                       <td className="px-3 py-2" data-label="Form Title">
                         {order?.form?.form_title} (ID:#{order?.form?.id})
                       </td>
-                      <td className="px-3 py-2" data-label="Company (Client)">
+                      <td className="px-3 py-2" data-label="Client Company">
                         {order?.order_detail?.clientData?.companyInfo?.companyName}
                       </td>
                       <td className="px-3 py-2 text-left" data-label="Total">
-                        ${order.total_amount}
+                        {formatCurrency(order.total_amount)}
                       </td>
                       <td className="px-3 py-2" data-label="Status">
                         {(() => {
@@ -224,14 +248,15 @@ export default function Orders() {
                               className={`inline-flex max-w-fit px-3 py-0.5 rounded-full border capitalize text-sm font-medium ${colorClasses}`}
                               style={{ maxWidth: "fit-content" }}
                             >
-                              {order.status}
+                              {order.status == "pending" && order.payment_type == "pay_later" ? "Awaiting payment" : order.status }
+                             
                             </span>
                           );
                         })()}
                       </td>
 
                       <td className="px-3 py-2" data-label="Date">
-                        {new Date(order.created_at).toLocaleDateString()}
+                       {formatToMDY(order.created_at)}
                       </td>
                       <td
                         className="px-3 py-2 text-center"

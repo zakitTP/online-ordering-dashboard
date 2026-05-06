@@ -25,7 +25,7 @@ import Profile from "./pages/admin/Profile";
 import Orders from "./pages/admin/Orders";
 import ViewOrder from "./pages/admin/Orders/ViewOrder";
 import EmailLogsPage from "./pages/admin/Emails";
-
+  //  <BrowserRouter basename="/order/admin"></BrowserRouter>
 
 
 function App() {
@@ -35,7 +35,7 @@ function App() {
   }, [dispatch]);
 
   return (
-    <BrowserRouter basename="/order/admin">
+   <BrowserRouter basename="/order/admin">
       <Routes> 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<Login />} />

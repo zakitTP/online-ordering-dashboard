@@ -43,7 +43,7 @@ export default function Forms() {
   const [actionLoading, setActionLoading] = useState(null); // control loading for individual actions
 
   const navigate = useNavigate();
-  const site_url = "https://av-canada.com/order/client"; // base URL for public forms
+  const site_url = import.meta.env.VITE_CLIENT_BASE_URL; // base URL for public forms
 
   // ✅ Fetch forms when component loads
   useEffect(() => {
@@ -190,14 +190,10 @@ export default function Forms() {
 
   // ✅ Format date in MM/DD/YYYY
   const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
+  if (!dateString) return "-";
+  const [year, month, day] = dateString.split("-"); 
+  return `${month}/${day}/${year}`;                 
+};
 
   // ✅ Render status badges (Draft / Publish)
   const getStatusBadge = (status) => {
@@ -267,8 +263,8 @@ export default function Forms() {
         <table className="min-w-full text-sm db-back-table responsive">
           <thead>
             <tr>
-              <th className="text-left font-medium px-3 py-2">Form Title</th>
-              <th className="text-left font-medium px-3 py-2">Company Name</th>
+              <th className="text-left font-medium px-3 py-2 w-1/4">Form Title</th>
+              <th className="text-left font-medium px-3 py-2 w-1/4">Tradeshow Name</th>
               <th className="text-left font-medium px-3 py-2">Date</th>
               <th className="text-left font-medium px-3 py-2">Access Code</th>
               <th className="text-left font-medium px-3 py-2">Status</th>
@@ -280,21 +276,21 @@ export default function Forms() {
               <tr key={form.id} className="border-t">
                 {/* Form Title */}
                 <td className="px-3 py-2 font-medium" data-label="Form Title">
-                  {form.form_title} (ID:#{form.id})
+                  {form?.other_settings?.developer_mode == true && ("(Dev)")}  {form?.form_title} (ID:#{form.id})
                 </td>
                 {/* Company Name */}
                 <td className="px-3 py-2" data-label="Company Name">
-                  {form.company_name || "-"}
+                  {form?.event_info?.showName || "-"}
                 </td>
                 {/* Created Date */}
                 <td className="px-3 py-2" data-label="Date">
-                  {formatDate(form.created_at)}
+                  {formatDate(form?.event_info?.startDate )}
                 </td>
                 {/* Access Code */}
                 <td className="px-3 py-2" data-label="Access Code">
                   <div className="inline-flex items-center gap-2">
                     <span className="font-mono bg-white border border-slate-300 rounded px-2 py-1">
-                      {form.access_code || "-"}
+                      {form?.access_code || "-"}
                     </span>
                     {form.access_code && (
                       <button

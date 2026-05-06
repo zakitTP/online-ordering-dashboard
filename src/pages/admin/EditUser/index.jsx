@@ -121,13 +121,8 @@ export default function EditUser() {
   // ✅ Show loader while fetching user data
   if (fetching) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4 flex items-center justify-center">
-        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm max-w-md w-full mx-auto">
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-            <p className="text-lg text-gray-600">Loading user data...</p>
-          </div>
-        </div>
+          <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-600"></div>
       </div>
     );
   }

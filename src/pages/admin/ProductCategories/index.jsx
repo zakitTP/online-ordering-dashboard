@@ -3,29 +3,33 @@ import { FiTrash2, FiPlus, FiEdit } from "react-icons/fi";
 import apiClient from "../../../apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useDispatch,useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCategories } from "../../../lib/categoriesSlice";
 
 export default function CategoriesPage() {
   const dispatch = useDispatch();
-const categories = useSelector((state) => state.categories.items);
+  const categories = useSelector((state) => state.categories.items);
+
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [newCategory, setNewCategory] = useState("");
   const [includeMounting, setIncludeMounting] = useState(false);
   const [includeAccessories, setIncludeAccessories] = useState(false);
+
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [transferCategoryId, setTransferCategoryId] = useState(null);
 
   // Fetch categories
   const fetchCategories = async () => {
     try {
       setLoading(true);
       const res = await apiClient.get("api/categories");
-      dispatch(setCategories(res.data))
+      dispatch(setCategories(res.data));
     } catch (err) {
       toast.error("Failed to fetch categories");
     } finally {
@@ -33,6 +37,9 @@ const categories = useSelector((state) => state.categories.items);
     }
   };
 
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   // Add category
   const handleAddCategory = async () => {
@@ -40,6 +47,7 @@ const categories = useSelector((state) => state.categories.items);
 
     try {
       setActionLoading(true);
+
       await apiClient.post("api/categories", {
         name: newCategory,
         includeMounting,
@@ -51,21 +59,20 @@ const categories = useSelector((state) => state.categories.items);
       setShowAddModal(false);
       fetchCategories();
     } catch (err) {
-      toast.error(
-        err.response?.data?.errors?.name?.[0] || "Failed to add category"
-      );
+      toast.error(err.response?.data?.errors?.name?.[0] || "Failed to add category");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Edit category (API call)
+  // Edit category
   const handleEditCategory = async () => {
     if (!selectedCategory || !newCategory.trim())
       return toast.error("Category name is required");
 
     try {
       setActionLoading(true);
+
       await apiClient.put(`api/categories/${selectedCategory.id}`, {
         name: newCategory,
         includeMounting,
@@ -86,9 +93,17 @@ const categories = useSelector((state) => state.categories.items);
   // Delete category
   const handleDeleteCategory = async () => {
     if (!selectedCategory) return;
+
     try {
       setActionLoading(true);
-      await apiClient.delete(`api/categories/${selectedCategory.id}`);
+
+      await apiClient.delete(`api/categories/${selectedCategory.id}`, {
+        data: {
+          transfer_to:
+            selectedCategory.products_count > 0 ? transferCategoryId : null,
+        },
+      });
+
       toast.success("Category deleted successfully");
       setShowDeleteModal(false);
       fetchCategories();
@@ -100,12 +115,12 @@ const categories = useSelector((state) => state.categories.items);
     }
   };
 
-  // Reset form fields
   const resetForm = () => {
     setNewCategory("");
     setIncludeMounting(false);
     setIncludeAccessories(false);
     setSelectedCategory(null);
+    setTransferCategoryId(null);
   };
 
   return (
@@ -113,7 +128,6 @@ const categories = useSelector((state) => state.categories.items);
       <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="bg-white border border-slate-200 rounded-2xl p-2 md:p-6 shadow-sm">
-        {/* Header */}
         <div className="flex items-center gap-2 justify-between mb-4">
           <h3 className="font-bold text-black text-3xl">Categories</h3>
           <button
@@ -124,7 +138,6 @@ const categories = useSelector((state) => state.categories.items);
           </button>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex items-center justify-center min-h-[200px]">
@@ -140,64 +153,78 @@ const categories = useSelector((state) => state.categories.items);
                   <th className="text-center font-medium px-3 py-2">Actions</th>
                 </tr>
               </thead>
-              <tbody className="main-card-box-row">
-            {categories.length === 0 ? (
-  <tr>
-    <td colSpan="4" className="px-3 py-6 text-center text-gray-500">
-      No categories found
-    </td>
-  </tr>
-) : (
-  categories.map((cat, index) => (
-    <tr key={cat.id} className="border-t hover:bg-gray-50">
-      <td className="px-3 py-2" data-label="Sr.No">{index + 1}</td>
-      <td className="px-3 py-2 font-medium" data-label="Category">{cat.name}</td>
-      <td className="px-3 py-2 text-center" data-label="Type">
-        {cat.includeMounting && cat.includeAccessories
-          ? "Mounting + Accessories"
-          : cat.includeMounting
-          ? "Mounting"
-          : cat.includeAccessories
-          ? "Accessories"
-          : "Product"}
-      </td>
+              <tbody>
+                {categories.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="px-3 py-6 text-center text-gray-500">
+                      No categories found
+                    </td>
+                  </tr>
+                ) : (
+                  categories.map((cat, index) => (
+                    <tr key={cat.id} className="border-t hover:bg-gray-50">
+                      <td className="px-3 py-2">{index + 1}</td>
+                      <td className="px-3 py-2 font-medium">{cat.name}</td>
+                      <td className="px-3 py-2 text-center">
+                        {cat.includeMounting && cat.includeAccessories
+                          ? "Mounting + Accessories"
+                          : cat.includeMounting
+                          ? "Mounting"
+                          : cat.includeAccessories
+                          ? "Accessories"
+                          : "Product"}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="flex gap-2 justify-center">
+                          <button
+                            onClick={() => {
+                              setSelectedCategory(cat);
+                              setNewCategory(cat.name);
+                              setIncludeMounting(cat.includeMounting);
+                              setIncludeAccessories(cat.includeAccessories);
+                              setShowEditModal(true);
+                            }}
+                            className="px-2 py-1 rounded bg-black text-white text-sm"
+                          >
+                            <FiEdit size={14} />
+                          </button>
 
-      <td className="px-3 py-2 text-center" data-label="Actions">
-        <div className="mobile-action-btns flex gap-2 xl:justify-center justify-start">
-          <button
-            onClick={() => {
-              setSelectedCategory(cat);
-              setNewCategory(cat.name);
-              setIncludeMounting(cat.includeMounting);
-              setIncludeAccessories(cat.includeAccessories);
-              setShowEditModal(true);
-            }}
-            className="px-2 py-1 rounded bg-black text-white text-sm"
-          >
-            <FiEdit size={14} />
-          </button>
-          <button
-            onClick={() => {
-              setSelectedCategory(cat);
-              setShowDeleteModal(true);
-            }}
-            className="px-2 py-1 rounded bg-red-600 text-white text-xs"
-          >
-            <FiTrash2 size={14} />
-          </button>
-        </div>
-      </td>
-    </tr>
-  ))
+                      {categories.length > 1 && (
+  <button
+    onClick={() => {
+      setSelectedCategory(cat);
+
+      const otherCats = categories.filter((c) => c.id !== cat.id);
+
+      // If cat has products but no other place to transfer → block deletion
+      if (cat.products_count > 0 && otherCats.length === 0) {
+        toast.error("Cannot delete this category because no other category exists to transfer products.");
+        return;
+      }
+
+      if (cat.products_count > 0) {
+        setTransferCategoryId(otherCats[0].id);
+      }
+
+      setShowDeleteModal(true);
+    }}
+    className="px-2 py-1 rounded bg-red-600 text-white text-xs"
+  >
+    <FiTrash2 size={14} />
+  </button>
 )}
-
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           )}
         </div>
       </div>
 
-      {/* Add Category Modal */}
+      {/* Add Modal */}
       {showAddModal && (
         <CategoryModal
           title="Add Category"
@@ -214,7 +241,7 @@ const categories = useSelector((state) => state.categories.items);
         />
       )}
 
-      {/* Edit Category Modal */}
+      {/* Edit Modal */}
       {showEditModal && (
         <CategoryModal
           title="Edit Category"
@@ -231,34 +258,65 @@ const categories = useSelector((state) => state.categories.items);
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* DELETE MODAL */}
       {showDeleteModal && selectedCategory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow w-96">
-            <h2 className="text-2xl text-black font-bold">Are you sure?</h2>
-            <p className="text-base text-black my-3">
-              Do you really want to delete{" "}
-              <strong>{selectedCategory.name}</strong>?
-            </p>
-            <div className="flex justify-end gap-2">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+
+            <h2 className="text-2xl font-bold text-black">Delete Category</h2>
+
+            {selectedCategory.products_count > 0 ? (
+              <>
+                <p className="mt-3 text-black">
+                  <strong>{selectedCategory.name}</strong> has{" "}
+                  <strong>{selectedCategory.products_count}</strong> product(s).  
+                  Please transfer them before deleting.
+                </p>
+
+                <label className="block mt-3 text-black font-medium">
+                  Transfer Products To
+                </label>
+                <select
+                  className="mt-1 w-full border px-3 py-2 rounded"
+                  value={transferCategoryId}
+                  onChange={(e) => setTransferCategoryId(e.target.value)}
+                >
+                  {categories
+                    .filter((c) => c.id !== selectedCategory.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                </select>
+              </>
+            ) : (
+              <p className="mt-3 text-black">
+                Do you really want to delete{" "}
+                <strong>{selectedCategory.name}</strong>?
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 mt-5">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
-                disabled={actionLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded"
               >
                 Cancel
               </button>
+
               <button
                 onClick={handleDeleteCategory}
-                className="px-3 md:px-5 py-3 rounded bg-black text-white text-xl flex items-center gap-2"
                 disabled={actionLoading}
+                className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
               >
                 {actionLoading && (
-                  <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                 )}
                 Delete
               </button>
             </div>
+
           </div>
         </div>
       )}
@@ -266,7 +324,6 @@ const categories = useSelector((state) => state.categories.items);
   );
 }
 
-// ✅ Reusable Modal Component (for Add / Edit)
 function CategoryModal({
   title,
   confirmText,
@@ -281,73 +338,66 @@ function CategoryModal({
   onConfirm,
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
-
-      <div className="relative w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white shadow-xl p-6 z-10">
-        <h3 className="text-2xl text-black font-bold">{title}</h3>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg">
+        <h3 className="text-2xl font-bold text-black">{title}</h3>
 
         <form
-          className="mt-3 space-y-4"
+          className="mt-4 space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
             onConfirm();
           }}
         >
           <div>
-            <label className="text-lg text-black font-medium">
-              Category Name
-            </label>
+            <label className="text-black font-medium">Category Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded border border-slate-300 px-3 py-2"
+              className="mt-1 w-full border px-3 py-2 rounded"
               placeholder="e.g., Logistics"
               disabled={loading}
             />
           </div>
 
-          {/* Checkboxes */}
           <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-2">
+            <label className="flex gap-2 items-center">
               <input
                 type="checkbox"
                 checked={includeMounting}
                 onChange={(e) => setIncludeMounting(e.target.checked)}
                 disabled={loading}
               />
-              <span className="text-black text-base">Include in Mounting</span>
+              <span className="text-black">Include in Mounting</span>
             </label>
 
-            <label className="flex items-center gap-2">
+            <label className="flex gap-2 items-center">
               <input
                 type="checkbox"
                 checked={includeAccessories}
                 onChange={(e) => setIncludeAccessories(e.target.checked)}
                 disabled={loading}
               />
-              <span className="text-black text-base">
-                Include in Accessories
-              </span>
+              <span className="text-black">Include in Accessories</span>
             </label>
           </div>
 
-          <div className="mt-5 flex items-center justify-end gap-2">
+          <div className="flex justify-end gap-3 mt-5">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl"
-              disabled={loading}
+              className="px-4 py-2 bg-red-600 text-white rounded"
             >
               Cancel
             </button>
+
             <button
               type="submit"
-              className="px-3 md:px-5 py-3 rounded bg-black text-white text-xl flex items-center gap-2"
               disabled={loading}
+              className="px-4 py-2 bg-black text-white rounded flex items-center gap-2"
             >
               {loading && (
-                <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
               )}
               {confirmText}
             </button>

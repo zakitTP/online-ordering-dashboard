@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import apiClient from "../../../apiClient";
 
 export default function AddProduct() {
+   const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
     title: "",
     description: "",
@@ -243,7 +245,7 @@ export default function AddProduct() {
             </button>
             <button
               type="button"
-              onClick={resetForm}
+             onClick={() => navigate("/dashboard/products")}
               className="px-3 md:px-5 py-3 rounded bg-[#C81A1F] text-white text-xl w-32 text-center"
             >
               Cancel

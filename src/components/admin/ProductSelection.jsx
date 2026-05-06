@@ -2,7 +2,19 @@ import React, { useState, useEffect } from "react";
 import apiClient from "../../apiClient";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
+const formatCurrency = (amount) => {
+  const numericAmount = parseFloat(amount);
 
+  return isNaN(numericAmount)
+    ? "CAD 0.00"
+    : numericAmount.toLocaleString("en-CA", {
+        style: "currency",
+        currency: "CAD",
+        currencyDisplay: "code", // shows CAD instead of $
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+};
 const ProductSelection = ({
   formData,
   setFormData,
@@ -240,7 +252,7 @@ const ProductSelection = ({
                       <img
                         src={p.image_url}
                         alt={p.title}
-                        className="w-24 h-18 md:w-40 md:h-24 object-cover rounded ring-1 ring-white/10"
+                        className="w-24 h-18 md:w-40 md:h-24 rounded ring-1 ring-white/10"
                       />
                     )}
                   </div>
@@ -253,7 +265,7 @@ const ProductSelection = ({
                           Prepaid
                         </div>
                         <div>
-                          ${p.prepaid_price}
+                          {formatCurrency(p.prepaid_price)}
                           <span className="text-slate-500 text-[14px]">/day</span>
                         </div>
                       </div>
@@ -263,7 +275,7 @@ const ProductSelection = ({
                           Standard
                         </div>
                         <div>
-                          ${p.standard_price}
+                          {formatCurrency(p.standard_price)}
                           <span className="text-slate-500 text-[14px]">/day</span>
                         </div>
                       </div>
